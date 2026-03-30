@@ -78,10 +78,37 @@ function cleanPrefix(raw: string): string | null {
 
   if (cleaned.length < 2) return null;
 
-  // Title case
-  return cleaned
-    .split(" ")
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+  return titleCase(cleaned);
+}
+
+// Words that should stay lowercase in titles (unless first word)
+const LOWERCASE_WORDS = new Set([
+  "a", "an", "the", "and", "but", "or", "nor", "for", "yet", "so",
+  "in", "on", "at", "to", "by", "of", "up", "as", "is", "if", "it",
+  "vs", "via",
+]);
+
+/**
+ * Properly title-case a string.
+ * Handles: "the show" → "The Show", "breaking bad" → "Breaking Bad",
+ * "tHeShOw" → "Theshow" (treats as single word)
+ */
+export function titleCase(input: string): string {
+  // First, split camelCase/PascalCase if it looks like one word with mixed case
+  // e.g. "TheShow" → "The Show", "breakingBad" → "breaking Bad"
+  let spaced = input.replace(/([a-z])([A-Z])/g, "$1 $2");
+
+  // Now split into words and title-case
+  const words = spaced.split(/\s+/).filter((w) => w.length > 0);
+  return words
+    .map((w, i) => {
+      const lower = w.toLowerCase();
+      // First word is always capitalized
+      if (i === 0) return lower.charAt(0).toUpperCase() + lower.slice(1);
+      // Common lowercase words stay lowercase
+      if (LOWERCASE_WORDS.has(lower)) return lower;
+      return lower.charAt(0).toUpperCase() + lower.slice(1);
+    })
     .join(" ");
 }
 
@@ -185,8 +212,9 @@ export async function analyzeFolder(folderPath: string): Promise<FileAnalysis> {
         bestCount = count;
       }
     }
-    // Find original casing
-    detectedShowName = showNames.find((n) => n.toLowerCase() === bestName) || null;
+    // Title-case the detected name
+    const raw = showNames.find((n) => n.toLowerCase() === bestName) || bestName;
+    detectedShowName = titleCase(raw.replace(/[._]/g, " ").replace(/\s+/g, " ").trim());
   }
 
   // 2. From common prefix as fallback

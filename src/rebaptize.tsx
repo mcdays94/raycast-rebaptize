@@ -167,11 +167,15 @@ export default function Rebaptize() {
     switch (a.suggestedMode) {
       case "tv-show":
         setShowName(name);
-        if (a.detectedSeasons.length > 0) {
+        if (a.detectedSeasons.length === 1) {
           setSeason(String(a.detectedSeasons[0]));
         }
         if (name) notes.push(`Show name: "${name}"`);
-        if (a.detectedSeasons.length > 0) notes.push(`Seasons detected: ${a.detectedSeasons.join(", ")}`);
+        if (a.detectedSeasons.length > 1) {
+          notes.push(`${a.detectedSeasons.length} seasons detected (${a.detectedSeasons.join(", ")}) — use Smart Organize Episodes for multi-season sorting`);
+        } else if (a.detectedSeasons.length === 1) {
+          notes.push(`Season ${a.detectedSeasons[0]}`);
+        }
         break;
       case "anime":
         setAnimeName(name);
