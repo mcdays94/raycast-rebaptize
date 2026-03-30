@@ -24,6 +24,8 @@ declare namespace Preferences {
   export type SortByDate = ExtensionPreferences & {}
   /** Preferences accessible in the `sort-by-location` command */
   export type SortByLocation = ExtensionPreferences & {}
+  /** Preferences accessible in the `smart-find-replace` command */
+  export type SmartFindReplace = ExtensionPreferences & {}
 }
 
 declare namespace Arguments {
@@ -35,5 +37,7 @@ declare namespace Arguments {
   export type SortByDate = {}
   /** Arguments passed to the `sort-by-location` command */
   export type SortByLocation = {}
+  /** Arguments passed to the `smart-find-replace` command */
+  export type SmartFindReplace = {}
 }
 

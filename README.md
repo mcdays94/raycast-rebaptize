@@ -61,6 +61,24 @@ Organize photos into subfolders based on GPS data in EXIF metadata. Uses OpenStr
 
 Supported formats: JPEG, TIFF, HEIC, DNG, and various RAW formats.
 
+### Smart Find & Replace
+
+A powerful find and replace tool for filenames with:
+
+- **Up to 3 rules** applied in sequence — chain operations together
+- **Regex support** with capture groups (`$1`, `$2`) in replacements
+- **File filter** — target specific files with glob patterns (e.g. `*.mkv`, `*.{jpg,png}`)
+- **Case sensitivity toggle** per rule
+- **Extension control** — choose whether to include the file extension in replacements
+- **Live preview** before committing
+
+**Example rules:**
+| Find | Replace | Regex | Effect |
+|---|---|---|---|
+| `\.720p\.BluRay.*?-(\w+)` | `.$1` | Yes | Strip quality tags, keep group name |
+| `[ _]` | `.` | Yes | Replace spaces/underscores with dots |
+| `HDTV` | *(empty)* | No | Remove "HDTV" from filenames |
+
 ## TheTVDB Integration (Optional)
 
 The **Smart Organize Episodes** command can optionally use [TheTVDB](https://thetvdb.com) to automatically fetch season and episode data for any TV show or anime.

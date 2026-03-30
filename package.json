@@ -37,6 +37,12 @@
       "title": "Sort Photos by Location",
       "description": "Organize photos into folders based on GPS location data from EXIF metadata",
       "mode": "view"
+    },
+    {
+      "name": "smart-find-replace",
+      "title": "Smart Find & Replace",
+      "description": "Find and replace patterns in filenames with multi-rule support, regex capture groups, and file filters",
+      "mode": "view"
     }
   ],
   "preferences": [
