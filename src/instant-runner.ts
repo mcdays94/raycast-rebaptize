@@ -1,4 +1,4 @@
-import { showToast, Toast, showHUD, confirmAlert, Alert } from "@raycast/api";
+import { showToast, Toast, showHUD } from "@raycast/api";
 import { readdir, stat, rename as fsRename } from "fs/promises";
 import { join } from "path";
 import { getFinderFolder } from "./finder";
@@ -39,7 +39,8 @@ export async function getFinderFiles(): Promise<{ folderPath: string; files: str
 }
 
 /**
- * Run an instant rename: apply a transform function, confirm, execute.
+ * Run an instant rename: apply transform, execute immediately, show undo toast.
+ * No confirmation dialog — runs instantly. Undo available via toast action.
  */
 export async function runInstantRename(
   transform: (fileName: string) => string,
@@ -56,23 +57,40 @@ export async function runInstantRename(
     const changed = results.filter((r) => r.original !== r.renamed);
 
     if (changed.length === 0) {
-      await showHUD("No files to rename");
+      await showHUD("No changes needed");
       return;
     }
 
-    const confirmed = await confirmAlert({
-      title: `${actionName}: ${changed.length} files`,
-      message: `${changed.slice(0, 3).map((r) => `${r.original} → ${r.renamed}`).join("\n")}${changed.length > 3 ? `\n...and ${changed.length - 3} more` : ""}`,
-      primaryAction: { title: "Rename", style: Alert.ActionStyle.Destructive },
-    });
-
-    if (!confirmed) return;
-
+    // Execute renames
     for (const r of changed) {
       await fsRename(join(folderPath, r.original), join(folderPath, r.renamed));
     }
 
-    await showHUD(`Renamed ${changed.length} files`);
+    // Show success toast with undo action
+    await showToast({
+      style: Toast.Style.Success,
+      title: `${actionName}: ${changed.length} files`,
+      message: "Press ⌘Z to undo",
+      primaryAction: {
+        title: "Undo",
+        shortcut: { modifiers: ["cmd"], key: "z" },
+        onAction: async () => {
+          try {
+            // Reverse all renames
+            for (const r of changed) {
+              await fsRename(join(folderPath, r.renamed), join(folderPath, r.original));
+            }
+            await showHUD(`Undid ${changed.length} renames`);
+          } catch (error) {
+            await showToast({
+              style: Toast.Style.Failure,
+              title: "Undo failed",
+              message: error instanceof Error ? error.message : String(error),
+            });
+          }
+        },
+      },
+    });
   } catch (error) {
     await showToast({
       style: Toast.Style.Failure,

@@ -1,94 +1,140 @@
 # Rebaptize
 
-A [Raycast](https://raycast.com) extension for bulk renaming, smart episode organizing, and sorting files by date or location.
+A [Raycast](https://raycast.com) extension for bulk renaming and organizing files. Every function is available as its own Raycast command — assign aliases and hotkeys to the ones you use most.
 
-## Commands
+## Commands Overview
+
+Rebaptize has three tiers of commands:
+
+1. **Full UI commands** — forms with configuration, preview, and confirm
+2. **Preset shortcuts** — jump straight to a specific rename mode (still shows a form)
+3. **Instant commands** — no UI, runs immediately against the current Finder folder with undo support
+
+All commands auto-detect the current Finder folder. No need to manually pick a folder if Finder is open.
+
+---
+
+## Full UI Commands
 
 ### Rebaptize Files
 
-Bulk rename files in a folder using presets. Works with any file type.
+The main command. Pick a preset, configure options, preview all renames, then confirm.
 
 | Preset | Example Output |
 |---|---|
-| TV Show | `Breaking.Bad.S01E01.mkv` |
+| TV Show | `Breaking Bad S01E01.mkv` |
 | Anime | `[SubsPlease] Jujutsu Kaisen - 01 [1080p].mkv` |
-| Movie | `Interstellar.2014.1080p.mkv` |
+| Movie | `Interstellar 2014 1080p.mkv` |
 | Sequential | `Vacation-001.jpg` |
 | Date-Based | `Trip-2026-03-30_14-30-00-001.jpg` |
-| Find & Replace | `My.Old.Name.txt → My.New.Name.txt` |
+| Change Case | `MY SHOW NAME.mkv` / `my show name.mkv` / `My Show Name.mkv` |
+| Swap Delimiter | `My.Show.S01E01` → `My Show S01E01` |
+| Auto Enumerate | `001.jpg`, `002.jpg`, `003.jpg` (by name, date created, or date modified) |
+| Change Extension | `*.jpeg` → `*.jpg` |
+| Find & Replace | Plain text or regex on filenames |
+
+**Smart detection:** Analyzes files in the folder and auto-suggests the best preset, auto-fills show names, season numbers, etc.
+
+**Word separator:** Choose space, dot, underscore, dash, or a custom delimiter for TV Show and Movie presets.
+
+**Suffix:** Optionally add text after `S01E01` (e.g. `1080p`, `PROPER`).
 
 ### Smart Organize Episodes
 
-Auto-detect episode numbers from filenames and organize into season folders with proper naming. Designed for bulk-downloaded anime and TV shows.
+Auto-detect episode numbers from filenames and organize into season folders. Designed for bulk-downloaded anime and TV shows.
 
-**Smart detection** parses episode numbers from many formats:
-- `S01E01`, `1x01` — standard TV
-- `[SubsPlease] Show Name - 01 [1080p]` — anime fansub
-- `Episode 01`, `Ep01`, `EP01` — verbose
-- `001.mkv`, `01 - Title.mkv` — bare numbers
-- `Show.Name.E01` — partial
+**Parses:** `S01E01`, `1x01`, `[SubsPlease] Name - 01`, `Episode 01`, `Ep01`, `001.mkv`, `01 - Title.mkv`, `Show.Name.E01`
 
 **Season splitting:**
-- If filenames already contain season info (`S01E01`), it's used directly
-- Otherwise, flat episode numbers (1, 2, ... 50) are split by configurable episodes-per-season
-- With a **TheTVDB API key**, season/episode data is fetched automatically from thetvdb.com — no manual config needed
+- Uses season info from filenames if present (`S01E01`)
+- Otherwise splits by configurable episodes-per-season
+- Optionally fetches real data from TheTVDB
 
-**Customizable templates:**
-- Folder: `Season {season}`, `{show} - Season {season}`, etc.
-- File: `{show}.S{season}E{episode}`, `{show} - {season}x{episode}`, etc.
-
-### Sort Files by Date
-
-Organize files into subfolders by creation date.
-
-| Granularity | Example Folder |
-|---|---|
-| Day | `2026-03-30/` |
-| Month | `2026-03/` |
-| Year | `2026/` |
-
-Choose to move or copy files.
-
-### Sort Photos by Location
-
-Organize photos into subfolders based on GPS data in EXIF metadata. Uses OpenStreetMap for reverse geocoding — no API key required.
-
-| Granularity | Example Folder |
-|---|---|
-| City | `Lisbon/`, `Tokyo/` |
-| State / Region | `California/`, `Bavaria/` |
-| Country | `Portugal/`, `Japan/` |
-
-Supported formats: JPEG, TIFF, HEIC, DNG, and various RAW formats.
+**Customizable templates** for folder names (`Season {season}`) and filenames (`{show}.S{season}E{episode}`).
 
 ### Smart Find & Replace
 
-A powerful find and replace tool for filenames with:
+Multi-rule find and replace with regex capture groups, file filters, and case sensitivity toggles. Up to 3 rules applied in sequence.
 
-- **Up to 3 rules** applied in sequence — chain operations together
-- **Regex support** with capture groups (`$1`, `$2`) in replacements
-- **File filter** — target specific files with glob patterns (e.g. `*.mkv`, `*.{jpg,png}`)
-- **Case sensitivity toggle** per rule
-- **Extension control** — choose whether to include the file extension in replacements
-- **Live preview** before committing
+### Sort Files by Date
 
-**Example rules:**
-| Find | Replace | Regex | Effect |
-|---|---|---|---|
-| `\.720p\.BluRay.*?-(\w+)` | `.$1` | Yes | Strip quality tags, keep group name |
-| `[ _]` | `.` | Yes | Replace spaces/underscores with dots |
-| `HDTV` | *(empty)* | No | Remove "HDTV" from filenames |
+Organize files into subfolders by creation date — by day, month, or year. Move or copy.
+
+### Sort Photos by Location
+
+Organize photos into subfolders by GPS data from EXIF metadata (city, state, or country). Uses OpenStreetMap — no API key required.
+
+---
+
+## Preset Shortcuts
+
+Each preset is also available as its own command for quick access:
+
+| Command | Mode |
+|---|---|
+| Rename as TV Show | TV Show (S01E01) |
+| Rename as Anime | Anime ([Group] Name - 01) |
+| Rename as Movie | Movie (Name Year Quality) |
+| Rename Sequentially | Sequential (Prefix-001) |
+| Rename by Date | Date-based rename |
+| Change Filename Case | UPPERCASE / lowercase / Title Case / Sentence case |
+| Swap Filename Delimiter | Replace one delimiter with another |
+| Auto Enumerate Files | Number files sequentially |
+| Change File Extension | Bulk change extensions |
+
+---
+
+## Instant Commands
+
+These run immediately with **no UI** — just execute against the current Finder folder. A success toast appears with an **Undo** action (`⌘Z`) to reverse the rename.
+
+### Case
+
+| Command | Effect |
+|---|---|
+| Uppercase All Filenames | `my show` → `MY SHOW` |
+| Lowercase All Filenames | `MY SHOW` → `my show` |
+| Title Case All Filenames | `my show name` → `My Show Name` |
+| Sentence Case All Filenames | `my SHOW name` → `My show name` |
+
+### Delimiters
+
+| Command | Effect |
+|---|---|
+| Replace Dots with Spaces | `My.Show.S01E01` → `My Show S01E01` |
+| Replace Spaces with Dots | `My Show` → `My.Show` |
+| Replace Underscores with Spaces | `my_file` → `my file` |
+| Replace Spaces with Underscores | `my file` → `my_file` |
+| Replace Dashes with Spaces | `my-file` → `my file` |
+| Replace Spaces with Dashes | `my file` → `my-file` |
+
+### Utility
+
+| Command | Effect |
+|---|---|
+| Collapse Multiple Spaces | `my  show   name` → `my show name` |
+| Enumerate Files by Name | Alphabetical order → `001.ext`, `002.ext` |
+| Enumerate Files by Date Created | Oldest first → `001.ext`, `002.ext` |
+
+---
 
 ## TheTVDB Integration (Optional)
 
-The **Smart Organize Episodes** command can optionally use [TheTVDB](https://thetvdb.com) to automatically fetch season and episode data for any TV show or anime.
+The **Smart Organize Episodes** command can optionally use [TheTVDB](https://thetvdb.com) to automatically fetch season and episode data.
 
 To enable:
 1. Create an account at [thetvdb.com](https://thetvdb.com) and get a free API key from your [dashboard](https://www.thetvdb.com/dashboard/account/apikey)
 2. Open Raycast Preferences → Extensions → Rebaptize
 3. Paste your API key in the **TheTVDB API Key** field
 
-Without a key, the extension still works — it just uses manual episodes-per-season splitting.
+Without a key, the extension still works — it uses manual episodes-per-season splitting.
+
+## Tips
+
+- **Aliases:** Open Raycast → search for any command → `⌘K` → Configure Command → set an Alias (e.g. `uc` for Uppercase All)
+- **Hotkeys:** Same menu — assign a global hotkey to any command
+- **Undo:** Instant commands show a toast with `⌘Z` to undo. Act quickly — the toast disappears after a few seconds.
+- **Finder:** All commands auto-detect the Finder folder. Just have Finder open to the right folder before running a command.
 
 ## Requirements
 
