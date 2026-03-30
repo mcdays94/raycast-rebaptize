@@ -150,8 +150,8 @@ export async function reverseGeocode(
       case "country":
         return addr.country || "Unknown";
     }
-  } catch {
-    return "Unknown";
+  } catch (error) {
+    return `Error: ${error instanceof Error ? error.message : String(error)}`;
   }
 }
 
