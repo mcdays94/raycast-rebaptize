@@ -1,7 +1,7 @@
 import { stat } from "fs/promises";
 import { extname, join } from "path";
 
-export type RenameMode = "tv-show" | "anime" | "movie" | "sequential" | "date" | "find-replace";
+export type RenameMode = "tv-show" | "anime" | "movie" | "sequential" | "date" | "find-replace" | "change-extension";
 
 export interface RenameOptions {
   mode: RenameMode;
@@ -31,6 +31,9 @@ export interface RenameOptions {
   wordDelimiter?: string;
   // Suffix after SxxExx (e.g. "1080p", "PROPER")
   suffix?: string;
+  // Change extension mode
+  fromExtension?: string; // filter: only change files with this extension (empty = all)
+  toExtension?: string;
   // Find & Replace mode
   find?: string;
   replace?: string;
@@ -130,6 +133,21 @@ export async function generateDateName(
   }
 }
 
+// Change extension: photo.jpeg → photo.jpg
+export function generateChangedExtension(fileName: string, fromExt: string, toExt: string): string {
+  const ext = extname(fileName).toLowerCase();
+  const normalizedFrom = fromExt ? (fromExt.startsWith(".") ? fromExt.toLowerCase() : `.${fromExt.toLowerCase()}`) : "";
+  const normalizedTo = toExt.startsWith(".") ? toExt : `.${toExt}`;
+
+  // If fromExt is set, only change files that match
+  if (normalizedFrom && ext !== normalizedFrom) {
+    return fileName; // unchanged
+  }
+
+  const nameWithoutExt = fileName.slice(0, fileName.length - extname(fileName).length);
+  return nameWithoutExt + normalizedTo;
+}
+
 // Find & Replace on the filename (preserves extension)
 export function generateFindReplaceName(fileName: string, find: string, replace: string, useRegex: boolean): string {
   const ext = extname(fileName);
@@ -208,6 +226,13 @@ export async function generatePreviews(
           options.find ?? "",
           options.replace ?? "",
           options.useRegex ?? false,
+        );
+        break;
+      case "change-extension":
+        renamed = generateChangedExtension(
+          fileName,
+          options.fromExtension ?? "",
+          options.toExtension ?? "",
         );
         break;
     }

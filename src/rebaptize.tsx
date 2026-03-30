@@ -129,6 +129,10 @@ export default function Rebaptize() {
   const [dateFormat, setDateFormat] = useState<"YYYY-MM-DD" | "DD-MM-YYYY" | "MM-DD-YYYY">("YYYY-MM-DD");
   const [datePrefix, setDatePrefix] = useState("");
 
+  // Change extension
+  const [fromExtension, setFromExtension] = useState("");
+  const [toExtension, setToExtension] = useState("");
+
   // Find & Replace
   const [find, setFind] = useState("");
   const [replace, setReplace] = useState("");
@@ -292,6 +296,14 @@ export default function Rebaptize() {
           options.replace = replace;
           options.useRegex = useRegex;
           break;
+        case "change-extension":
+          if (!toExtension.trim()) {
+            await showToast({ style: Toast.Style.Failure, title: "New extension is required" });
+            return;
+          }
+          options.fromExtension = fromExtension.trim();
+          options.toExtension = toExtension.trim();
+          break;
       }
 
       const previews = await generatePreviews(folder, files, options);
@@ -384,6 +396,7 @@ export default function Rebaptize() {
         <Form.Dropdown.Item value="sequential" title="Sequential (Prefix-001)" icon={Icon.NumberList} />
         <Form.Dropdown.Item value="date" title="Date-Based" icon={Icon.Calendar} />
         <Form.Dropdown.Item value="find-replace" title="Find & Replace" icon={Icon.MagnifyingGlass} />
+        <Form.Dropdown.Item value="change-extension" title="Change Extension" icon={Icon.Document} />
       </Form.Dropdown>
 
       <Form.Separator />
@@ -475,6 +488,34 @@ export default function Rebaptize() {
           <Form.TextField id="replace" title="Replace With" placeholder="new-text" value={replace} onChange={setReplace} />
           <Form.Checkbox id="useRegex" label="Use Regular Expression" value={useRegex} onChange={setUseRegex} />
           <Form.Description title="Preview" text={frPreview()} />
+        </>
+      )}
+
+      {mode === "change-extension" && (
+        <>
+          <Form.TextField
+            id="fromExtension"
+            title="From Extension (Optional)"
+            placeholder="jpeg"
+            value={fromExtension}
+            onChange={setFromExtension}
+            info="Only change files with this extension. Leave empty to change all files."
+          />
+          <Form.TextField
+            id="toExtension"
+            title="New Extension"
+            placeholder="jpg"
+            value={toExtension}
+            onChange={setToExtension}
+          />
+          <Form.Description
+            title="Preview"
+            text={
+              fromExtension.trim()
+                ? `*.${fromExtension.trim()} → *.${toExtension.trim() || "?"}`
+                : `*.* → *.${toExtension.trim() || "?"}`
+            }
+          />
         </>
       )}
     </Form>
