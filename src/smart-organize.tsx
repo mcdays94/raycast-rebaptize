@@ -14,7 +14,7 @@ import {
 import { useState, useEffect } from "react";
 import { readdir, stat, mkdir, rename as fsRename } from "fs/promises";
 import { join, extname } from "path";
-import { parseEpisode, assignSeasons, parseSeasonBreakdown, type ParsedEpisode } from "./episode-parser";
+import { parseEpisode, assignSeasons, type ParsedEpisode } from "./episode-parser";
 import { hasTvdbKey, searchShow as tvdbSearch, buildEpisodeMap as tvdbBuildMap, type ShowInfo as TvdbShowInfo } from "./tvdb";
 import { hasTmdbKey, searchShow as tmdbSearch, buildEpisodeMap as tmdbBuildMap, type ShowInfo as TmdbShowInfo } from "./tmdb";
 import { getFinderFolder } from "./finder";
@@ -105,7 +105,8 @@ export default function SmartOrganize() {
   const [suggestionNote, setSuggestionNote] = useState("");
   const [showName, setShowName] = useState("");
   const [metadataSource, setMetadataSource] = useState<MetadataSource>("none");
-  const [seasonBreakdown, setSeasonBreakdown] = useState("12");
+  const [seasons, setSeasons] = useState<{ episodes: string }[]>([{ episodes: "12" }]);
+  const [startAtZero, setStartAtZero] = useState(false);
   const [folderTemplate, setFolderTemplate] = useState("Season {season}");
   const [fileTemplate, setFileTemplate] = useState("{show}.S{season}E{episode}");
 
@@ -135,7 +136,7 @@ export default function SmartOrganize() {
         notes.push(`Show name: "${a.detectedShowName}"`);
       }
       if (a.estimatedEpisodesPerSeason) {
-        setSeasonBreakdown(String(a.estimatedEpisodesPerSeason));
+        setSeasons([{ episodes: String(a.estimatedEpisodesPerSeason) }]);
         notes.push(`~${a.estimatedEpisodesPerSeason} eps/season detected`);
       }
       if (a.detectedSeasons.length > 0) {
@@ -265,8 +266,8 @@ export default function SmartOrganize() {
           });
           // Fallback to manual season breakdown
           const epNumbers = parsed.map((p) => p.episodeNumber);
-          const counts = parseSeasonBreakdown(seasonBreakdown);
-          const seasonMap = assignSeasons(epNumbers, counts.length > 0 ? counts : [12]);
+          const counts = seasons.map((s) => parseInt(s.episodes) || 12);
+          const seasonMap = assignSeasons(epNumbers, counts);
           episodeMap = new Map();
           for (const [ep, info] of seasonMap) {
             episodeMap.set(ep, { season: info.season, episode: info.episodeInSeason });
@@ -286,8 +287,8 @@ export default function SmartOrganize() {
           }
         } else {
           const epNumbers = parsed.map((p) => p.episodeNumber);
-          const counts = parseSeasonBreakdown(seasonBreakdown);
-          const seasonMap = assignSeasons(epNumbers, counts.length > 0 ? counts : [12]);
+          const counts = seasons.map((s) => parseInt(s.episodes) || 12);
+          const seasonMap = assignSeasons(epNumbers, counts);
           episodeMap = new Map();
           for (const [ep, info] of seasonMap) {
             episodeMap.set(ep, { season: info.season, episode: info.episodeInSeason });
@@ -297,6 +298,7 @@ export default function SmartOrganize() {
 
       // Build organized file list
       const show = showName.trim().replace(/\s+/g, ".");
+      const seasonOffset = startAtZero ? -1 : 0;
       const organized: OrganizedFile[] = [];
 
       for (const p of parsed) {
@@ -304,20 +306,21 @@ export default function SmartOrganize() {
         if (!mapping) continue;
 
         const ext = extname(p.fileName);
+        const displaySeason = mapping.season + seasonOffset;
 
         const targetFolder = folderTemplate
-          .replace("{season}", padNumber(mapping.season, 2))
+          .replace("{season}", padNumber(displaySeason, 2))
           .replace("{show}", show);
 
         const newName =
           fileTemplate
             .replace("{show}", show)
-            .replace("{season}", padNumber(mapping.season, 2))
+            .replace("{season}", padNumber(displaySeason, 2))
             .replace("{episode}", padNumber(mapping.episode, 2)) + ext;
 
         organized.push({
           original: p.fileName,
-          season: mapping.season,
+          season: displaySeason,
           episodeInSeason: mapping.episode,
           newName,
           folder: targetFolder,
@@ -350,6 +353,22 @@ export default function SmartOrganize() {
       actions={
         <ActionPanel>
           <Action.SubmitForm title="Scan and Preview" icon={Icon.Eye} onSubmit={handleSubmit} />
+          {metadataSource === "none" && (
+            <Action
+              title="Add Season"
+              icon={Icon.Plus}
+              shortcut={{ modifiers: ["cmd"], key: "n" }}
+              onAction={() => setSeasons([...seasons, { episodes: "12" }])}
+            />
+          )}
+          {metadataSource === "none" && seasons.length > 1 && (
+            <Action
+              title="Remove Last Season"
+              icon={Icon.Minus}
+              shortcut={{ modifiers: ["cmd"], key: "backspace" }}
+              onAction={() => setSeasons(seasons.slice(0, -1))}
+            />
+          )}
         </ActionPanel>
       }
     >
@@ -408,14 +427,26 @@ export default function SmartOrganize() {
       )}
 
       {metadataSource === "none" && (
-        <Form.TextField
-          id="seasonBreakdown"
-          title="Episodes per Season"
-          placeholder="7, 13, 13, 13, 16"
-          value={seasonBreakdown}
-          onChange={setSeasonBreakdown}
-          info="Comma-separated episode counts per season. E.g. '7, 13, 13' means Season 1 has 7 eps, Season 2 has 13, Season 3 has 13. Ignored if filenames already contain season info (S01E01)."
-        />
+        <>
+          {seasons.map((s, i) => (
+            <Form.TextField
+              key={`season-${i}`}
+              id={`season-${i}`}
+              title={`Season ${i + (startAtZero ? 0 : 1)} Episodes`}
+              placeholder="12"
+              value={s.episodes}
+              onChange={(val) => {
+                const updated = [...seasons];
+                updated[i] = { episodes: val };
+                setSeasons(updated);
+              }}
+            />
+          ))}
+          <Form.Description
+            title=""
+            text={`${seasons.length} season${seasons.length === 1 ? "" : "s"} configured (${seasons.map((s) => s.episodes || "?").join(", ")} episodes). Press Cmd+N to add a season, Cmd+Delete to remove.`}
+          />
+        </>
       )}
 
       <Form.Separator />
@@ -436,6 +467,16 @@ export default function SmartOrganize() {
         value={fileTemplate}
         onChange={setFileTemplate}
         info="Variables: {show}, {season}, {episode}. Extension is added automatically."
+      />
+
+      <Form.Separator />
+
+      <Form.Checkbox
+        id="startAtZero"
+        label="Start season numbering at 00"
+        value={startAtZero}
+        onChange={setStartAtZero}
+        info="When enabled, the first season is numbered 00 instead of 01. Useful for shows with a Season 0 or pilot season."
       />
 
       <Form.Description
