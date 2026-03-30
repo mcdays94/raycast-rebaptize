@@ -1,5 +1,5 @@
 import { getPreferenceValues } from "@raycast/api";
-import fetch from "node-fetch";
+import https from "https";
 
 interface Preferences {
   tvdbApiKey?: string;
@@ -46,6 +46,35 @@ export function hasTvdbKey(): boolean {
  * Authenticate with TVDB v4 API and get a bearer token.
  * Tokens are cached for 24 hours.
  */
+function httpsRequest(url: string, options: { method?: string; headers?: Record<string, string>; body?: string }): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const parsed = new URL(url);
+    const req = https.request(
+      {
+        hostname: parsed.hostname,
+        path: parsed.pathname + parsed.search,
+        method: options.method || "GET",
+        headers: options.headers || {},
+      },
+      (res) => {
+        let data = "";
+        res.on("data", (chunk: Buffer) => { data += chunk.toString(); });
+        res.on("end", () => {
+          if (res.statusCode && res.statusCode >= 400) {
+            reject(new Error(`TVDB API error (${res.statusCode}): ${data}`));
+          } else {
+            resolve(data);
+          }
+        });
+      },
+    );
+    req.on("error", reject);
+    req.setTimeout(15000, () => { req.destroy(new Error("Request timeout")); });
+    if (options.body) req.write(options.body);
+    req.end();
+  });
+}
+
 async function getToken(): Promise<string> {
   const apiKey = getApiKey();
   if (!apiKey) throw new Error("TVDB API key not configured");
@@ -54,18 +83,13 @@ async function getToken(): Promise<string> {
     return cachedToken;
   }
 
-  const response = await fetch(`${TVDB_BASE}/login`, {
+  const raw = await httpsRequest(`${TVDB_BASE}/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ apikey: apiKey }),
   });
 
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`TVDB login failed (${response.status}): ${text}`);
-  }
-
-  const data = (await response.json()) as { data: { token: string } };
+  const data = JSON.parse(raw) as { data: { token: string } };
   cachedToken = data.data.token;
   tokenExpiry = Date.now() + 24 * 60 * 60 * 1000; // 24h
   return cachedToken;
@@ -74,15 +98,11 @@ async function getToken(): Promise<string> {
 async function tvdbFetch<T>(path: string): Promise<T> {
   const token = await getToken();
 
-  const response = await fetch(`${TVDB_BASE}${path}`, {
+  const raw = await httpsRequest(`${TVDB_BASE}${path}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
 
-  if (!response.ok) {
-    throw new Error(`TVDB API error: ${response.status} ${response.statusText}`);
-  }
-
-  const json = (await response.json()) as { data: T };
+  const json = JSON.parse(raw) as { data: T };
   return json.data;
 }
 

@@ -1,5 +1,5 @@
 import { getPreferenceValues } from "@raycast/api";
-import fetch from "node-fetch";
+import https from "https";
 
 interface Preferences {
   tmdbApiKey?: string;
@@ -39,6 +39,24 @@ export function hasTmdbKey(): boolean {
   return getApiKey() !== null;
 }
 
+function httpsGet(url: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const req = https.get(url, (res) => {
+      let data = "";
+      res.on("data", (chunk: Buffer) => { data += chunk.toString(); });
+      res.on("end", () => {
+        if (res.statusCode && res.statusCode >= 400) {
+          reject(new Error(`TMDB API error: ${res.statusCode} — ${data}`));
+        } else {
+          resolve(data);
+        }
+      });
+    });
+    req.on("error", reject);
+    req.setTimeout(15000, () => { req.destroy(new Error("Request timeout")); });
+  });
+}
+
 async function tmdbFetch<T>(path: string, params: Record<string, string> = {}): Promise<T> {
   const apiKey = getApiKey();
   if (!apiKey) throw new Error("TMDB API key not configured");
@@ -49,12 +67,8 @@ async function tmdbFetch<T>(path: string, params: Record<string, string> = {}): 
     url.searchParams.set(k, v);
   }
 
-  const response = await fetch(url.toString());
-  if (!response.ok) {
-    const body = await response.text().catch(() => "");
-    throw new Error(`TMDB API error: ${response.status} ${response.statusText} — ${body}`);
-  }
-  return response.json() as Promise<T>;
+  const raw = await httpsGet(url.toString());
+  return JSON.parse(raw) as T;
 }
 
 /**

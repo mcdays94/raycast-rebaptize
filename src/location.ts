@@ -1,5 +1,5 @@
-import fetch from "node-fetch";
 import { readFile, stat, mkdir, copyFile, rename as fsRename } from "fs/promises";
+import https from "https";
 import { readdir } from "fs/promises";
 import { join, extname } from "path";
 import exifReader from "exif-reader";
@@ -114,6 +114,18 @@ export async function extractGps(filePath: string): Promise<{ lat: number; lon: 
  * Reverse geocode coordinates using OpenStreetMap Nominatim (free, no API key).
  * Respects the 1 request/second rate limit.
  */
+function httpsGet(url: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const req = https.get(url, { headers: { "User-Agent": "Rebaptize-Raycast-Extension/1.0" } }, (res) => {
+      let data = "";
+      res.on("data", (chunk: Buffer) => { data += chunk.toString(); });
+      res.on("end", () => resolve(data));
+    });
+    req.on("error", reject);
+    req.setTimeout(10000, () => { req.destroy(new Error("Request timeout")); });
+  });
+}
+
 export async function reverseGeocode(
   lat: number,
   lon: number,
@@ -121,13 +133,8 @@ export async function reverseGeocode(
 ): Promise<string> {
   try {
     const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10&addressdetails=1`;
-    const response = await fetch(url, {
-      headers: { "User-Agent": "Rebaptize-Raycast-Extension/1.0" },
-    });
-
-    if (!response.ok) return "Unknown";
-
-    const data = (await response.json()) as {
+    const raw = await httpsGet(url);
+    const data = JSON.parse(raw) as {
       address?: {
         city?: string;
         town?: string;
