@@ -171,8 +171,12 @@ export default function SmartOrganize() {
         if (results.length > 0 && !selectedShowId) {
           setSelectedShowId(String(results[0].id));
         }
-      } catch {
-        // search failed, not critical
+      } catch (error) {
+        await showToast({
+          style: Toast.Style.Failure,
+          title: "Search failed",
+          message: error instanceof Error ? error.message : String(error),
+        });
       }
       setSearching(false);
     }, 500);

@@ -1,3 +1,4 @@
+import fetch from "node-fetch";
 import { readFile, stat, mkdir, copyFile, rename as fsRename } from "fs/promises";
 import { readdir } from "fs/promises";
 import { join, extname } from "path";

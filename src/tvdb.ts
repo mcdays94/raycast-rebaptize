@@ -1,4 +1,5 @@
 import { getPreferenceValues } from "@raycast/api";
+import fetch from "node-fetch";
 
 interface Preferences {
   tvdbApiKey?: string;
