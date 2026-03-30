@@ -1,6 +1,45 @@
 import { stat } from "fs/promises";
 import { extname, join } from "path";
 
+/**
+ * Lightweight inline episode parser to avoid circular/heavy imports.
+ * Extracts season and episode numbers from a filename.
+ */
+function parseSeasonEpisode(fileName: string): { season: number | null; episode: number | null } {
+  const ext = extname(fileName);
+  const name = fileName.slice(0, fileName.length - ext.length);
+
+  // S01E01, s01e01
+  const sxe = name.match(/[Ss](\d{1,2})[Ee](\d{1,3})/);
+  if (sxe) return { season: parseInt(sxe[1]), episode: parseInt(sxe[2]) };
+
+  // 1x01
+  const cross = name.match(/(\d{1,2})x(\d{2,3})/i);
+  if (cross) return { season: parseInt(cross[1]), episode: parseInt(cross[2]) };
+
+  // [Group] Name - 01 (anime, no season)
+  const anime = name.match(/^\[.*?\]\s*.+\s*-\s*(\d{2,4})\b/);
+  if (anime) return { season: null, episode: parseInt(anime[1]) };
+
+  // E01 without season
+  const eOnly = name.match(/[Ee](\d{1,3})\b/);
+  if (eOnly) return { season: null, episode: parseInt(eOnly[1]) };
+
+  // Episode 01
+  const verbose = name.match(/(?:Episode|Ep\.?|EP)\s*(\d{1,4})\b/i);
+  if (verbose) return { season: null, episode: parseInt(verbose[1]) };
+
+  // Pure number: 001.mkv
+  const pure = name.match(/^(\d{1,4})$/);
+  if (pure) return { season: null, episode: parseInt(pure[1]) };
+
+  // Leading number: 01 - Title
+  const leading = name.match(/^(\d{1,4})\s*[.\s_-]+/);
+  if (leading) return { season: null, episode: parseInt(leading[1]) };
+
+  return { season: null, episode: null };
+}
+
 export type RenameMode = "tv-show" | "anime" | "movie" | "sequential" | "date" | "find-replace" | "change-extension" | "change-case" | "swap-delimiter" | "enumerate";
 
 export interface RenameOptions {
@@ -257,25 +296,33 @@ export async function generatePreviews(
     let renamed: string;
 
     switch (options.mode) {
-      case "tv-show":
+      case "tv-show": {
+        // Try to detect season/episode from the existing filename
+        const tvParsed = parseSeasonEpisode(fileName);
+        const tvSeason = tvParsed.season ?? options.season ?? 1;
+        const tvEpisode = tvParsed.episode ?? (options.startEpisode ?? 1) + i;
         renamed = generateTvShowName(
           fileName,
           options.showName || "Show",
-          options.season ?? 1,
-          (options.startEpisode ?? 1) + i,
+          tvSeason,
+          tvEpisode,
           options.wordDelimiter ?? " ",
           options.suffix ?? "",
         );
         break;
-      case "anime":
+      }
+      case "anime": {
+        const animeParsed = parseSeasonEpisode(fileName);
+        const animeEpisode = animeParsed.episode ?? (options.startAnimeEpisode ?? 1) + i;
         renamed = generateAnimeName(
           fileName,
           options.animeName || "Anime",
-          (options.startAnimeEpisode ?? 1) + i,
+          animeEpisode,
           options.group ?? "",
           options.quality ?? "",
         );
         break;
+      }
       case "movie":
         renamed = generateMovieName(fileName, options.movieName || "Movie", options.year ?? "", options.movieQuality ?? "", options.wordDelimiter ?? " ");
         break;
