@@ -1,36 +1,43 @@
 # Rebaptize
 
-A [Raycast](https://raycast.com) extension for bulk renaming media files in a folder.
+A [Raycast](https://raycast.com) extension for bulk renaming files in a folder using presets for common use-cases.
 
-## Rename Modes
+Works with any file type.
 
-### TV Show (S01E01)
-Rename video files into standard TV show format: `Show.Name.S01E01.mkv`
-- Set the show name, season number, and starting episode
-- Files are sorted naturally and assigned episode numbers in order
+## Presets
 
-### Sequential Numbering
-Rename files with a prefix and sequential number: `Vacation-001.jpg`
-- Set the prefix, starting number, and zero-padding width
+### TV Show
+Rename files into standard TV show format.
+`Breaking.Bad.S01E01.mkv`
+
+### Anime
+Rename using the classic fansub convention with optional sub group and quality tags.
+`[SubsPlease] Jujutsu Kaisen - 01 [1080p].mkv`
+
+### Movie
+Rename into the standard movie format with optional year and quality.
+`Interstellar.2014.1080p.mkv`
+
+### Sequential
+Rename with a prefix and incrementing number. Configurable separator and zero-padding.
+`Vacation-001.jpg`
 
 ### Date-Based
-Rename files using their creation date: `Trip-2026-03-30_14-30-00-001.jpg`
-- Choose from YYYY-MM-DD, DD-MM-YYYY, or MM-DD-YYYY formats
-- Optional prefix
+Rename using the file's creation date. Supports YYYY-MM-DD, DD-MM-YYYY, and MM-DD-YYYY with optional prefix.
+`Trip-2026-03-30_14-30-00-001.jpg`
+
+### Find & Replace
+Find and replace text in filenames. Supports plain text and regular expressions.
+`My.Old.Name.txt → My.New.Name.txt`
 
 ## Usage
 
 1. Open Raycast and search for **"Rebaptize Files"**
-2. Select a folder containing media files
-3. Choose a rename mode and configure the options
-4. Preview all renames before confirming
-5. Confirm to apply
-
-## Supported File Types
-
-**Video:** mp4, mkv, avi, mov, wmv, flv, webm, m4v, mpg, mpeg, ts, vob
-
-**Image:** jpg, jpeg, png, gif, webp, tiff, tif, bmp, heic, heif, svg, raw, cr2, nef
+2. Select a folder
+3. Choose a preset and configure the options
+4. Live preview updates as you type
+5. Submit to see a full preview of all renames
+6. Confirm to apply
 
 ## Requirements
 

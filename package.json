@@ -2,7 +2,7 @@
   "$schema": "https://www.raycast.com/schemas/extension.json",
   "name": "rebaptize",
   "title": "Rebaptize",
-  "description": "Give your files a new name. Bulk rename using TV show (S01E01), sequential numbering, or date-based patterns",
+  "description": "Give your files a new name. Bulk rename using presets for TV shows, anime, movies, sequential numbering, dates, or find & replace",
   "icon": "icon.png",
   "author": "miguelcaetanodias",
   "categories": ["Productivity", "System"],

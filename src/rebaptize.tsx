@@ -13,21 +13,8 @@ import {
 } from "@raycast/api";
 import { useState } from "react";
 import { readdir, rename, stat } from "fs/promises";
-import { join, extname } from "path";
+import { join } from "path";
 import { type RenameMode, type RenameOptions, type RenamePreview, generatePreviews } from "./rename";
-
-const VIDEO_EXTENSIONS = new Set([
-  ".mp4", ".mkv", ".avi", ".mov", ".wmv", ".flv", ".webm", ".m4v", ".mpg", ".mpeg", ".ts", ".vob",
-]);
-
-const IMAGE_EXTENSIONS = new Set([
-  ".jpg", ".jpeg", ".png", ".gif", ".webp", ".tiff", ".tif", ".bmp", ".heic", ".heif", ".svg", ".raw", ".cr2", ".nef",
-]);
-
-function isMediaFile(fileName: string): boolean {
-  const ext = extname(fileName).toLowerCase();
-  return VIDEO_EXTENSIONS.has(ext) || IMAGE_EXTENSIONS.has(ext);
-}
 
 function isHidden(fileName: string): boolean {
   return fileName.startsWith(".");
@@ -40,42 +27,65 @@ async function getFiles(folderPath: string): Promise<string[]> {
     if (isHidden(entry)) continue;
     const fullPath = join(folderPath, entry);
     const s = await stat(fullPath);
-    if (s.isFile() && isMediaFile(entry)) {
+    if (s.isFile()) {
       files.push(entry);
     }
   }
-  // Sort naturally by name
   return files.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" }));
 }
 
-function PreviewList({
-  folderPath,
-  previews,
-  onConfirm,
-}: {
-  folderPath: string;
-  previews: RenamePreview[];
-  onConfirm: () => void;
-}) {
+function PreviewList({ folderPath, previews }: { folderPath: string; previews: RenamePreview[] }) {
+  const hasChanges = previews.some((p) => p.original !== p.renamed);
+
+  async function doRename() {
+    const confirmed = await confirmAlert({
+      title: `Rename ${previews.length} files?`,
+      message: "This cannot be undone.",
+      primaryAction: { title: "Rename", style: Alert.ActionStyle.Destructive },
+    });
+    if (!confirmed) return;
+
+    try {
+      await showToast({ style: Toast.Style.Animated, title: "Renaming files..." });
+      let count = 0;
+      for (const p of previews) {
+        if (p.original === p.renamed) continue;
+        await rename(join(folderPath, p.original), join(folderPath, p.renamed));
+        count++;
+      }
+      await showToast({ style: Toast.Style.Success, title: "Done!", message: `Renamed ${count} files` });
+    } catch (error) {
+      await showToast({
+        style: Toast.Style.Failure,
+        title: "Rename failed",
+        message: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
   return (
     <List navigationTitle="Preview Renames">
-      {previews.map((p, i) => (
-        <List.Item
-          key={i}
-          icon={{ source: Icon.ArrowRight, tintColor: Color.Blue }}
-          title={p.original}
-          subtitle={`→ ${p.renamed}`}
-          actions={
-            <ActionPanel>
-              <Action
-                title="Confirm Rename All"
-                icon={Icon.Checkmark}
-                onAction={onConfirm}
-              />
-            </ActionPanel>
-          }
-        />
-      ))}
+      {previews.map((p, i) => {
+        const changed = p.original !== p.renamed;
+        return (
+          <List.Item
+            key={i}
+            icon={{
+              source: changed ? Icon.ArrowRight : Icon.Minus,
+              tintColor: changed ? Color.Blue : Color.SecondaryText,
+            }}
+            title={p.original}
+            subtitle={changed ? `→ ${p.renamed}` : "(unchanged)"}
+            actions={
+              <ActionPanel>
+                {hasChanges && (
+                  <Action title="Confirm Rename All" icon={Icon.Checkmark} onAction={doRename} />
+                )}
+              </ActionPanel>
+            }
+          />
+        );
+      })}
     </List>
   );
 }
@@ -84,19 +94,37 @@ export default function Rebaptize() {
   const { push } = useNavigation();
   const [mode, setMode] = useState<RenameMode>("tv-show");
 
-  // TV show fields
+  // TV show
   const [showName, setShowName] = useState("");
   const [season, setSeason] = useState("1");
   const [startEpisode, setStartEpisode] = useState("1");
 
-  // Sequential fields
+  // Anime
+  const [animeName, setAnimeName] = useState("");
+  const [animeSeason, setAnimeSeason] = useState("1");
+  const [startAnimeEpisode, setStartAnimeEpisode] = useState("1");
+  const [group, setGroup] = useState("");
+  const [quality, setQuality] = useState("");
+
+  // Movie
+  const [movieName, setMovieName] = useState("");
+  const [year, setYear] = useState("");
+  const [movieQuality, setMovieQuality] = useState("");
+
+  // Sequential
   const [prefix, setPrefix] = useState("");
   const [startNumber, setStartNumber] = useState("1");
   const [zeroPad, setZeroPad] = useState("3");
+  const [separator, setSeparator] = useState("-");
 
-  // Date fields
+  // Date
   const [dateFormat, setDateFormat] = useState<"YYYY-MM-DD" | "DD-MM-YYYY" | "MM-DD-YYYY">("YYYY-MM-DD");
   const [datePrefix, setDatePrefix] = useState("");
+
+  // Find & Replace
+  const [find, setFind] = useState("");
+  const [replace, setReplace] = useState("");
+  const [useRegex, setUseRegex] = useState(false);
 
   async function handleSubmit(values: { folder: string[] }) {
     const folderPaths = values.folder;
@@ -109,7 +137,7 @@ export default function Rebaptize() {
     try {
       const files = await getFiles(folderPath);
       if (files.length === 0) {
-        await showToast({ style: Toast.Style.Failure, title: "No media files found", message: "The folder has no video or image files." });
+        await showToast({ style: Toast.Style.Failure, title: "No files found", message: "The folder is empty or contains only hidden files." });
         return;
       }
 
@@ -125,6 +153,26 @@ export default function Rebaptize() {
           options.season = parseInt(season) || 1;
           options.startEpisode = parseInt(startEpisode) || 1;
           break;
+        case "anime":
+          if (!animeName.trim()) {
+            await showToast({ style: Toast.Style.Failure, title: "Anime name is required" });
+            return;
+          }
+          options.animeName = animeName.trim();
+          options.animeSeason = parseInt(animeSeason) || 1;
+          options.startAnimeEpisode = parseInt(startAnimeEpisode) || 1;
+          options.group = group.trim();
+          options.quality = quality.trim();
+          break;
+        case "movie":
+          if (!movieName.trim()) {
+            await showToast({ style: Toast.Style.Failure, title: "Movie name is required" });
+            return;
+          }
+          options.movieName = movieName.trim();
+          options.year = year.trim();
+          options.movieQuality = movieQuality.trim();
+          break;
         case "sequential":
           if (!prefix.trim()) {
             await showToast({ style: Toast.Style.Failure, title: "Prefix is required" });
@@ -133,48 +181,26 @@ export default function Rebaptize() {
           options.prefix = prefix.trim();
           options.startNumber = parseInt(startNumber) || 1;
           options.zeroPad = parseInt(zeroPad) || 3;
+          options.separator = separator;
           break;
         case "date":
           options.dateFormat = dateFormat;
           options.datePrefix = datePrefix.trim();
           break;
+        case "find-replace":
+          if (!find) {
+            await showToast({ style: Toast.Style.Failure, title: "Find pattern is required" });
+            return;
+          }
+          options.find = find;
+          options.replace = replace;
+          options.useRegex = useRegex;
+          break;
       }
 
       const previews = await generatePreviews(folderPath, files, options);
 
-      push(
-        <PreviewList
-          folderPath={folderPath}
-          previews={previews}
-          onConfirm={async () => {
-            const confirmed = await confirmAlert({
-              title: `Rename ${previews.length} files?`,
-              message: "This cannot be undone.",
-              primaryAction: { title: "Rename", style: Alert.ActionStyle.Destructive },
-            });
-
-            if (!confirmed) return;
-
-            try {
-              await showToast({ style: Toast.Style.Animated, title: "Renaming files..." });
-              for (const p of previews) {
-                await rename(join(folderPath, p.original), join(folderPath, p.renamed));
-              }
-              await showToast({
-                style: Toast.Style.Success,
-                title: "Done!",
-                message: `Renamed ${previews.length} files`,
-              });
-            } catch (error) {
-              await showToast({
-                style: Toast.Style.Failure,
-                title: "Rename failed",
-                message: error instanceof Error ? error.message : String(error),
-              });
-            }
-          }}
-        />,
-      );
+      push(<PreviewList folderPath={folderPath} previews={previews} />);
     } catch (error) {
       await showToast({
         style: Toast.Style.Failure,
@@ -182,6 +208,54 @@ export default function Rebaptize() {
         message: error instanceof Error ? error.message : String(error),
       });
     }
+  }
+
+  // Live preview helpers
+  function tvPreview(): string {
+    const name = (showName.trim() || "Show.Name").replace(/\s+/g, ".");
+    return `${name}.S${(season || "1").padStart(2, "0")}E${(startEpisode || "1").padStart(2, "0")}.ext`;
+  }
+
+  function animePreview(): string {
+    const g = group.trim() ? `[${group.trim()}] ` : "";
+    const q = quality.trim() ? ` [${quality.trim()}]` : "";
+    return `${g}${animeName.trim() || "Anime Name"} - ${(startAnimeEpisode || "1").padStart(2, "0")}${q}.ext`;
+  }
+
+  function moviePreview(): string {
+    const parts = [(movieName.trim() || "Movie.Name").replace(/\s+/g, ".")];
+    if (year.trim()) parts.push(year.trim());
+    if (movieQuality.trim()) parts.push(movieQuality.trim());
+    return parts.join(".") + ".ext";
+  }
+
+  function seqPreview(): string {
+    const p = prefix.trim() || "file";
+    const s = separator || "-";
+    const n = (startNumber || "1").padStart(parseInt(zeroPad) || 3, "0");
+    return `${p}${s}${n}.ext`;
+  }
+
+  function datePreview(): string {
+    const p = datePrefix.trim() ? `${datePrefix.trim()}-` : "";
+    return `${p}2026-03-30_14-30-00-001.ext`;
+  }
+
+  function frPreview(): string {
+    const sample = "My.Example.File.Name.ext";
+    if (!find) return sample;
+    const nameWithoutExt = "My.Example.File.Name";
+    let result: string;
+    if (useRegex) {
+      try {
+        result = nameWithoutExt.replace(new RegExp(find, "g"), replace);
+      } catch {
+        result = nameWithoutExt;
+      }
+    } else {
+      result = nameWithoutExt.split(find).join(replace);
+    }
+    return `${result}.ext`;
   }
 
   return (
@@ -201,74 +275,65 @@ export default function Rebaptize() {
         canChooseFiles={false}
       />
 
-      <Form.Dropdown id="mode" title="Rename Mode" value={mode} onChange={(v) => setMode(v as RenameMode)}>
+      <Form.Dropdown id="mode" title="Preset" value={mode} onChange={(v) => setMode(v as RenameMode)}>
         <Form.Dropdown.Item value="tv-show" title="TV Show (S01E01)" icon={Icon.Tv} />
-        <Form.Dropdown.Item value="sequential" title="Sequential Numbering" icon={Icon.NumberList} />
+        <Form.Dropdown.Item value="anime" title="Anime ([Group] Name - 01)" icon={Icon.Stars} />
+        <Form.Dropdown.Item value="movie" title="Movie (Name.Year.Quality)" icon={Icon.Film} />
+        <Form.Dropdown.Item value="sequential" title="Sequential (Prefix-001)" icon={Icon.NumberList} />
         <Form.Dropdown.Item value="date" title="Date-Based" icon={Icon.Calendar} />
+        <Form.Dropdown.Item value="find-replace" title="Find & Replace" icon={Icon.MagnifyingGlass} />
       </Form.Dropdown>
 
       <Form.Separator />
 
+      {/* ── TV Show ── */}
       {mode === "tv-show" && (
         <>
-          <Form.TextField
-            id="showName"
-            title="Show Name"
-            placeholder="Breaking Bad"
-            value={showName}
-            onChange={setShowName}
-          />
-          <Form.TextField
-            id="season"
-            title="Season"
-            placeholder="1"
-            value={season}
-            onChange={setSeason}
-          />
-          <Form.TextField
-            id="startEpisode"
-            title="Start Episode"
-            placeholder="1"
-            value={startEpisode}
-            onChange={setStartEpisode}
-          />
-          <Form.Description
-            title="Preview"
-            text={`${(showName.trim() || "Show.Name").replace(/\s+/g, ".")}.S${(season || "1").padStart(2, "0")}E${(startEpisode || "1").padStart(2, "0")}.ext`}
-          />
+          <Form.TextField id="showName" title="Show Name" placeholder="Breaking Bad" value={showName} onChange={setShowName} />
+          <Form.TextField id="season" title="Season" placeholder="1" value={season} onChange={setSeason} />
+          <Form.TextField id="startEpisode" title="Start Episode" placeholder="1" value={startEpisode} onChange={setStartEpisode} />
+          <Form.Description title="Preview" text={tvPreview()} />
         </>
       )}
 
+      {/* ── Anime ── */}
+      {mode === "anime" && (
+        <>
+          <Form.TextField id="animeName" title="Anime Name" placeholder="Jujutsu Kaisen" value={animeName} onChange={setAnimeName} />
+          <Form.TextField id="startAnimeEpisode" title="Start Episode" placeholder="1" value={startAnimeEpisode} onChange={setStartAnimeEpisode} />
+          <Form.TextField id="group" title="Sub Group (Optional)" placeholder="SubsPlease" value={group} onChange={setGroup} />
+          <Form.TextField id="quality" title="Quality (Optional)" placeholder="1080p" value={quality} onChange={setQuality} />
+          <Form.Description title="Preview" text={animePreview()} />
+        </>
+      )}
+
+      {/* ── Movie ── */}
+      {mode === "movie" && (
+        <>
+          <Form.TextField id="movieName" title="Movie Name" placeholder="Interstellar" value={movieName} onChange={setMovieName} />
+          <Form.TextField id="year" title="Year (Optional)" placeholder="2014" value={year} onChange={setYear} />
+          <Form.TextField id="movieQuality" title="Quality (Optional)" placeholder="1080p" value={movieQuality} onChange={setMovieQuality} />
+          <Form.Description title="Preview" text={moviePreview()} />
+        </>
+      )}
+
+      {/* ── Sequential ── */}
       {mode === "sequential" && (
         <>
-          <Form.TextField
-            id="prefix"
-            title="Prefix"
-            placeholder="Vacation"
-            value={prefix}
-            onChange={setPrefix}
-          />
-          <Form.TextField
-            id="startNumber"
-            title="Start Number"
-            placeholder="1"
-            value={startNumber}
-            onChange={setStartNumber}
-          />
-          <Form.TextField
-            id="zeroPad"
-            title="Zero Padding"
-            placeholder="3"
-            value={zeroPad}
-            onChange={setZeroPad}
-          />
-          <Form.Description
-            title="Preview"
-            text={`${prefix.trim() || "file"}-${(startNumber || "1").padStart(parseInt(zeroPad) || 3, "0")}.ext`}
-          />
+          <Form.TextField id="prefix" title="Prefix" placeholder="Vacation" value={prefix} onChange={setPrefix} />
+          <Form.TextField id="startNumber" title="Start Number" placeholder="1" value={startNumber} onChange={setStartNumber} />
+          <Form.TextField id="zeroPad" title="Zero Padding" placeholder="3" value={zeroPad} onChange={setZeroPad} />
+          <Form.Dropdown id="separator" title="Separator" value={separator} onChange={setSeparator}>
+            <Form.Dropdown.Item value="-" title="Dash (-)" />
+            <Form.Dropdown.Item value="_" title="Underscore (_)" />
+            <Form.Dropdown.Item value="." title="Dot (.)" />
+            <Form.Dropdown.Item value=" " title="Space" />
+          </Form.Dropdown>
+          <Form.Description title="Preview" text={seqPreview()} />
         </>
       )}
 
+      {/* ── Date ── */}
       {mode === "date" && (
         <>
           <Form.Dropdown
@@ -281,17 +346,18 @@ export default function Rebaptize() {
             <Form.Dropdown.Item value="DD-MM-YYYY" title="DD-MM-YYYY" />
             <Form.Dropdown.Item value="MM-DD-YYYY" title="MM-DD-YYYY" />
           </Form.Dropdown>
-          <Form.TextField
-            id="datePrefix"
-            title="Prefix (Optional)"
-            placeholder="Trip"
-            value={datePrefix}
-            onChange={setDatePrefix}
-          />
-          <Form.Description
-            title="Preview"
-            text={`${datePrefix.trim() ? datePrefix.trim() + "-" : ""}2026-03-30_14-30-00-001.ext`}
-          />
+          <Form.TextField id="datePrefix" title="Prefix (Optional)" placeholder="Trip" value={datePrefix} onChange={setDatePrefix} />
+          <Form.Description title="Preview" text={datePreview()} />
+        </>
+      )}
+
+      {/* ── Find & Replace ── */}
+      {mode === "find-replace" && (
+        <>
+          <Form.TextField id="find" title="Find" placeholder="old-text" value={find} onChange={setFind} />
+          <Form.TextField id="replace" title="Replace With" placeholder="new-text" value={replace} onChange={setReplace} />
+          <Form.Checkbox id="useRegex" label="Use Regular Expression" value={useRegex} onChange={setUseRegex} />
+          <Form.Description title="Preview" text={frPreview()} />
         </>
       )}
     </Form>
