@@ -27,6 +27,8 @@ export interface RenameOptions {
   // Date mode
   dateFormat?: "YYYY-MM-DD" | "DD-MM-YYYY" | "MM-DD-YYYY";
   datePrefix?: string;
+  // Word delimiter (space, dot, underscore, dash)
+  wordDelimiter?: string;
   // Find & Replace mode
   find?: string;
   replace?: string;
@@ -61,11 +63,11 @@ function formatDate(date: Date, format: string): string {
   }
 }
 
-// TV Show: Breaking.Bad.S01E01.mkv
-export function generateTvShowName(fileName: string, showName: string, season: number, episode: number): string {
+// TV Show: Breaking Bad S01E01.mkv (delimiter configurable)
+export function generateTvShowName(fileName: string, showName: string, season: number, episode: number, delimiter = " "): string {
   const ext = extname(fileName);
-  const sanitized = showName.replace(/\s+/g, ".");
-  return `${sanitized}.S${padNumber(season, 2)}E${padNumber(episode, 2)}${ext}`;
+  const sanitized = showName.replace(/\s+/g, delimiter);
+  return `${sanitized}${delimiter}S${padNumber(season, 2)}E${padNumber(episode, 2)}${ext}`;
 }
 
 // Anime: [SubGroup] Anime Name - 01 [1080p].mkv
@@ -82,14 +84,14 @@ export function generateAnimeName(
   return `${groupTag}${animeName} - ${padNumber(episode, 2)}${qualityTag}${ext}`;
 }
 
-// Movie: Movie.Name.2026.1080p.mkv
-export function generateMovieName(fileName: string, movieName: string, year: string, quality: string): string {
+// Movie: Movie Name 2026 1080p.mkv (delimiter configurable)
+export function generateMovieName(fileName: string, movieName: string, year: string, quality: string, delimiter = " "): string {
   const ext = extname(fileName);
-  const sanitized = movieName.replace(/\s+/g, ".");
+  const sanitized = movieName.replace(/\s+/g, delimiter);
   const parts = [sanitized];
   if (year) parts.push(year);
   if (quality) parts.push(quality);
-  return parts.join(".") + ext;
+  return parts.join(delimiter) + ext;
 }
 
 // Sequential: Prefix-001.ext
@@ -163,6 +165,7 @@ export async function generatePreviews(
           options.showName || "Show",
           options.season ?? 1,
           (options.startEpisode ?? 1) + i,
+          options.wordDelimiter ?? " ",
         );
         break;
       case "anime":
@@ -175,7 +178,7 @@ export async function generatePreviews(
         );
         break;
       case "movie":
-        renamed = generateMovieName(fileName, options.movieName || "Movie", options.year ?? "", options.movieQuality ?? "");
+        renamed = generateMovieName(fileName, options.movieName || "Movie", options.year ?? "", options.movieQuality ?? "", options.wordDelimiter ?? " ");
         break;
       case "sequential":
         renamed = generateSequentialName(

@@ -97,6 +97,9 @@ export default function Rebaptize() {
   const [mode, setMode] = useState<RenameMode>("sequential");
   const [suggestionNote, setSuggestionNote] = useState("");
 
+  // Word delimiter (shared by TV show & Movie)
+  const [wordDelimiter, setWordDelimiter] = useState(" ");
+
   // TV show
   const [showName, setShowName] = useState("");
   const [season, setSeason] = useState("1");
@@ -236,6 +239,7 @@ export default function Rebaptize() {
           options.showName = showName.trim();
           options.season = parseInt(season) || 1;
           options.startEpisode = parseInt(startEpisode) || 1;
+          options.wordDelimiter = wordDelimiter;
           break;
         case "anime":
           if (!animeName.trim()) {
@@ -256,6 +260,7 @@ export default function Rebaptize() {
           options.movieName = movieName.trim();
           options.year = year.trim();
           options.movieQuality = movieQuality.trim();
+          options.wordDelimiter = wordDelimiter;
           break;
         case "sequential":
           if (!prefix.trim()) {
@@ -295,8 +300,9 @@ export default function Rebaptize() {
 
   // Live preview helpers
   function tvPreview(): string {
-    const name = (showName.trim() || "Show.Name").replace(/\s+/g, ".");
-    return `${name}.S${(season || "1").padStart(2, "0")}E${(startEpisode || "1").padStart(2, "0")}.ext`;
+    const d = wordDelimiter || " ";
+    const name = (showName.trim() || "Show Name").replace(/\s+/g, d);
+    return `${name}${d}S${(season || "1").padStart(2, "0")}E${(startEpisode || "1").padStart(2, "0")}.ext`;
   }
 
   function animePreview(): string {
@@ -306,10 +312,11 @@ export default function Rebaptize() {
   }
 
   function moviePreview(): string {
-    const parts = [(movieName.trim() || "Movie.Name").replace(/\s+/g, ".")];
+    const d = wordDelimiter || " ";
+    const parts = [(movieName.trim() || "Movie Name").replace(/\s+/g, d)];
     if (year.trim()) parts.push(year.trim());
     if (movieQuality.trim()) parts.push(movieQuality.trim());
-    return parts.join(".") + ".ext";
+    return parts.join(d) + ".ext";
   }
 
   function seqPreview(): string {
@@ -378,6 +385,12 @@ export default function Rebaptize() {
           <Form.TextField id="showName" title="Show Name" placeholder="Breaking Bad" value={showName} onChange={setShowName} />
           <Form.TextField id="season" title="Season" placeholder="1" value={season} onChange={setSeason} />
           <Form.TextField id="startEpisode" title="Start Episode" placeholder="1" value={startEpisode} onChange={setStartEpisode} />
+          <Form.Dropdown id="wordDelimiter" title="Word Separator" value={wordDelimiter} onChange={setWordDelimiter}>
+            <Form.Dropdown.Item value=" " title="Space ( )" />
+            <Form.Dropdown.Item value="." title="Dot (.)" />
+            <Form.Dropdown.Item value="_" title="Underscore (_)" />
+            <Form.Dropdown.Item value="-" title="Dash (-)" />
+          </Form.Dropdown>
           <Form.Description title="Preview" text={tvPreview()} />
         </>
       )}
@@ -397,6 +410,12 @@ export default function Rebaptize() {
           <Form.TextField id="movieName" title="Movie Name" placeholder="Interstellar" value={movieName} onChange={setMovieName} />
           <Form.TextField id="year" title="Year (Optional)" placeholder="2014" value={year} onChange={setYear} />
           <Form.TextField id="movieQuality" title="Quality (Optional)" placeholder="1080p" value={movieQuality} onChange={setMovieQuality} />
+          <Form.Dropdown id="wordDelimiterMovie" title="Word Separator" value={wordDelimiter} onChange={setWordDelimiter}>
+            <Form.Dropdown.Item value=" " title="Space ( )" />
+            <Form.Dropdown.Item value="." title="Dot (.)" />
+            <Form.Dropdown.Item value="_" title="Underscore (_)" />
+            <Form.Dropdown.Item value="-" title="Dash (-)" />
+          </Form.Dropdown>
           <Form.Description title="Preview" text={moviePreview()} />
         </>
       )}
