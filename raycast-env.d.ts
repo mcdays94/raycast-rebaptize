@@ -26,6 +26,10 @@ declare namespace Preferences {
   export type SortByLocation = ExtensionPreferences & {}
   /** Preferences accessible in the `smart-find-replace` command */
   export type SmartFindReplace = ExtensionPreferences & {}
+  /** Preferences accessible in the `create-script` command */
+  export type CreateScript = ExtensionPreferences & {}
+  /** Preferences accessible in the `run-script` command */
+  export type RunScript = ExtensionPreferences & {}
   /** Preferences accessible in the `preset-tv-show` command */
   export type PresetTvShow = ExtensionPreferences & {}
   /** Preferences accessible in the `preset-anime` command */
@@ -85,6 +89,10 @@ declare namespace Arguments {
   export type SortByLocation = {}
   /** Arguments passed to the `smart-find-replace` command */
   export type SmartFindReplace = {}
+  /** Arguments passed to the `create-script` command */
+  export type CreateScript = {}
+  /** Arguments passed to the `run-script` command */
+  export type RunScript = {}
   /** Arguments passed to the `preset-tv-show` command */
   export type PresetTvShow = {}
   /** Arguments passed to the `preset-anime` command */

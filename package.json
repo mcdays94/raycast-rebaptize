@@ -45,6 +45,18 @@
       "mode": "view"
     },
     {
+      "name": "create-script",
+      "title": "Create Rename Script",
+      "description": "Build a reusable rename pipeline: filter by file type, chain multiple rename steps, save and run with an alias",
+      "mode": "view"
+    },
+    {
+      "name": "run-script",
+      "title": "Run Rename Script",
+      "description": "List and run saved rename scripts against the current Finder folder",
+      "mode": "view"
+    },
+    {
       "name": "preset-tv-show",
       "title": "Rename as TV Show",
       "subtitle": "Rebaptize",
