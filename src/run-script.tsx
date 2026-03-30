@@ -23,6 +23,7 @@ import {
   stepLabel,
   stepTypeLabel,
 } from "./scripts";
+import CreateScript from "./create-script";
 import { getFinderFolder } from "./finder";
 import { saveUndoState } from "./instant-runner";
 
@@ -107,12 +108,14 @@ export default function RunScript() {
   const [scripts, setScripts] = useState<RenameScript[]>([]);
   const [loading, setLoading] = useState(true);
 
+  async function refreshScripts() {
+    const loaded = await listScripts();
+    setScripts(loaded);
+    setLoading(false);
+  }
+
   useEffect(() => {
-    (async () => {
-      const loaded = await listScripts();
-      setScripts(loaded);
-      setLoading(false);
-    })();
+    refreshScripts();
   }, []);
 
   async function runScript(script: RenameScript) {
@@ -173,6 +176,12 @@ export default function RunScript() {
           actions={
             <ActionPanel>
               <Action title="Run Script" icon={Icon.PlayFilled} onAction={() => runScript(script)} />
+              <Action
+                title="Edit Script"
+                icon={Icon.Pencil}
+                shortcut={{ modifiers: ["cmd"], key: "e" }}
+                onAction={() => push(<CreateScript existingScript={script} onSaved={refreshScripts} />)}
+              />
               <Action
                 title="View Steps"
                 icon={Icon.List}

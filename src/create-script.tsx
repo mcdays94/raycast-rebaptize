@@ -227,12 +227,14 @@ function StepForm({ onSubmit, existing }: { onSubmit: (step: ScriptStep) => void
 
 // ─── Main Create Script Command ───
 
-export default function CreateScript() {
+export default function CreateScript({ existingScript, onSaved }: { existingScript?: RenameScript; onSaved?: () => void } = {}) {
   const { push, pop } = useNavigation();
-  const [scriptName, setScriptName] = useState("");
-  const [description, setDescription] = useState("");
-  const [fileFilter, setFileFilter] = useState("");
-  const [steps, setSteps] = useState<ScriptStep[]>([]);
+  const isEditing = !!existingScript;
+  const [scriptId] = useState(existingScript?.id ?? randomUUID());
+  const [scriptName, setScriptName] = useState(existingScript?.name ?? "");
+  const [description, setDescription] = useState(existingScript?.description ?? "");
+  const [fileFilter, setFileFilter] = useState(existingScript?.fileFilter ?? "");
+  const [steps, setSteps] = useState<ScriptStep[]>(existingScript?.steps ?? []);
 
   function addStep(step: ScriptStep) {
     setSteps([...steps, step]);
@@ -273,16 +275,22 @@ export default function CreateScript() {
     }
 
     const script: RenameScript = {
-      id: randomUUID(),
+      id: scriptId,
       name: scriptName.trim(),
       description: description.trim(),
       fileFilter: fileFilter.trim(),
       steps,
-      createdAt: Date.now(),
+      createdAt: existingScript?.createdAt ?? Date.now(),
     };
 
     await saveScript(script);
-    await showHUD(`Script "${script.name}" saved`);
+    if (onSaved) onSaved();
+    if (isEditing) {
+      pop();
+      await showHUD(`Script "${script.name}" updated`);
+    } else {
+      await showHUD(`Script "${script.name}" saved`);
+    }
   }
 
   async function handlePreview() {
@@ -346,7 +354,7 @@ export default function CreateScript() {
 
   return (
     <List
-      navigationTitle="Create Rename Script"
+      navigationTitle={isEditing ? `Edit: ${existingScript?.name}` : "Create Rename Script"}
       searchBarPlaceholder="Script pipeline..."
       actions={
         <ActionPanel>
