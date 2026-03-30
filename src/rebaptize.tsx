@@ -133,6 +133,21 @@ export default function Rebaptize() {
   const [fromExtension, setFromExtension] = useState("");
   const [toExtension, setToExtension] = useState("");
 
+  // Change case
+  const [caseType, setCaseType] = useState<"uppercase" | "lowercase" | "titlecase" | "sentencecase">("titlecase");
+  const [fixSpaces, setFixSpaces] = useState(true);
+
+  // Swap delimiter
+  const [fromDelimiter, setFromDelimiter] = useState(".");
+  const [toDelimiter, setToDelimiter] = useState(" ");
+
+  // Enumerate
+  const [enumPrefix, setEnumPrefix] = useState("");
+  const [enumStart, setEnumStart] = useState("1");
+  const [enumPad, setEnumPad] = useState("3");
+  const [enumSeparator, setEnumSeparator] = useState("-");
+  const [enumSortBy, setEnumSortBy] = useState<"name" | "created" | "modified">("name");
+
   // Find & Replace
   const [find, setFind] = useState("");
   const [replace, setReplace] = useState("");
@@ -232,7 +247,7 @@ export default function Rebaptize() {
     }
 
     try {
-      const files = await getFiles(folder);
+      let files = await getFiles(folder);
       if (files.length === 0) {
         await showToast({ style: Toast.Style.Failure, title: "No files found" });
         return;
@@ -303,6 +318,39 @@ export default function Rebaptize() {
           }
           options.fromExtension = fromExtension.trim();
           options.toExtension = toExtension.trim();
+          break;
+        case "change-case":
+          options.caseType = caseType;
+          options.fixSpaces = fixSpaces;
+          break;
+        case "swap-delimiter":
+          if (!fromDelimiter) {
+            await showToast({ style: Toast.Style.Failure, title: "From delimiter is required" });
+            return;
+          }
+          options.fromDelimiter = fromDelimiter;
+          options.toDelimiter = toDelimiter;
+          break;
+        case "enumerate":
+          options.enumPrefix = enumPrefix.trim();
+          options.enumStart = parseInt(enumStart) || 1;
+          options.enumPad = parseInt(enumPad) || 3;
+          options.enumSeparator = enumSeparator;
+          options.enumSortBy = enumSortBy;
+          // Sort files by date if needed before generating previews
+          if (enumSortBy !== "name") {
+            const fileStats = await Promise.all(
+              files.map(async (f) => {
+                const s = await stat(join(folder, f));
+                const date = enumSortBy === "created"
+                  ? (s.birthtime.getTime() > 0 ? s.birthtime : s.mtime)
+                  : s.mtime;
+                return { name: f, date };
+              }),
+            );
+            fileStats.sort((a, b) => a.date.getTime() - b.date.getTime());
+            files = fileStats.map((f) => f.name);
+          }
           break;
       }
 
@@ -395,8 +443,11 @@ export default function Rebaptize() {
         <Form.Dropdown.Item value="movie" title="Movie (Name.Year.Quality)" icon={Icon.Film} />
         <Form.Dropdown.Item value="sequential" title="Sequential (Prefix-001)" icon={Icon.NumberList} />
         <Form.Dropdown.Item value="date" title="Date-Based" icon={Icon.Calendar} />
-        <Form.Dropdown.Item value="find-replace" title="Find & Replace" icon={Icon.MagnifyingGlass} />
+        <Form.Dropdown.Item value="change-case" title="Change Case" icon={Icon.Text} />
+        <Form.Dropdown.Item value="swap-delimiter" title="Swap Delimiter" icon={Icon.Switch} />
+        <Form.Dropdown.Item value="enumerate" title="Auto Enumerate" icon={Icon.List} />
         <Form.Dropdown.Item value="change-extension" title="Change Extension" icon={Icon.Document} />
+        <Form.Dropdown.Item value="find-replace" title="Find & Replace" icon={Icon.MagnifyingGlass} />
       </Form.Dropdown>
 
       <Form.Separator />
@@ -479,6 +530,75 @@ export default function Rebaptize() {
           </Form.Dropdown>
           <Form.TextField id="datePrefix" title="Prefix (Optional)" placeholder="Trip" value={datePrefix} onChange={setDatePrefix} />
           <Form.Description title="Preview" text={datePreview()} />
+        </>
+      )}
+
+      {mode === "change-case" && (
+        <>
+          <Form.Dropdown id="caseType" title="Case" value={caseType} onChange={(v) => setCaseType(v as typeof caseType)}>
+            <Form.Dropdown.Item value="titlecase" title="Title Case" />
+            <Form.Dropdown.Item value="uppercase" title="UPPERCASE" />
+            <Form.Dropdown.Item value="lowercase" title="lowercase" />
+            <Form.Dropdown.Item value="sentencecase" title="Sentence case" />
+          </Form.Dropdown>
+          <Form.Checkbox id="fixSpaces" label="Collapse multiple spaces into one" value={fixSpaces} onChange={setFixSpaces} />
+          <Form.Description
+            title="Preview"
+            text={(() => {
+              const sample = "my  show  name   S01E01";
+              const fixed = fixSpaces ? sample.replace(/\s{2,}/g, " ").trim() : sample;
+              switch (caseType) {
+                case "uppercase": return `${sample}\n→ ${fixed.toUpperCase()}`;
+                case "lowercase": return `${sample}\n→ ${fixed.toLowerCase()}`;
+                case "titlecase": return `${sample}\n→ ${fixed.split(/(\s+)/).map((w, i) => /^\s+$/.test(w) ? w : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join("")}`;
+                case "sentencecase": return `${sample}\n→ ${fixed.charAt(0).toUpperCase() + fixed.slice(1).toLowerCase()}`;
+                default: return sample;
+              }
+            })()}
+          />
+        </>
+      )}
+
+      {mode === "swap-delimiter" && (
+        <>
+          <Form.TextField id="fromDelimiter" title="From" placeholder="." value={fromDelimiter} onChange={setFromDelimiter} info="The character(s) to find and replace in filenames" />
+          <Form.TextField id="toDelimiter" title="To" placeholder=" " value={toDelimiter} onChange={setToDelimiter} info="The replacement character(s)" />
+          <Form.Description
+            title="Preview"
+            text={(() => {
+              const sample = fromDelimiter === "." ? "My.Show.S01E01.720p" : `My${fromDelimiter}Show${fromDelimiter}S01E01`;
+              const result = fromDelimiter ? sample.split(fromDelimiter).join(toDelimiter) : sample;
+              return `${sample}.ext\n→ ${result}.ext`;
+            })()}
+          />
+        </>
+      )}
+
+      {mode === "enumerate" && (
+        <>
+          <Form.TextField id="enumPrefix" title="Prefix (Optional)" placeholder="photo" value={enumPrefix} onChange={setEnumPrefix} />
+          <Form.TextField id="enumStart" title="Start Number" placeholder="1" value={enumStart} onChange={setEnumStart} />
+          <Form.TextField id="enumPad" title="Zero Padding" placeholder="3" value={enumPad} onChange={setEnumPad} />
+          <Form.Dropdown id="enumSeparator" title="Separator" value={enumSeparator} onChange={setEnumSeparator}>
+            <Form.Dropdown.Item value="-" title="Dash (-)" />
+            <Form.Dropdown.Item value="_" title="Underscore (_)" />
+            <Form.Dropdown.Item value="." title="Dot (.)" />
+            <Form.Dropdown.Item value=" " title="Space" />
+          </Form.Dropdown>
+          <Form.Dropdown id="enumSortBy" title="Sort Files By" value={enumSortBy} onChange={(v) => setEnumSortBy(v as typeof enumSortBy)}>
+            <Form.Dropdown.Item value="name" title="File Name" icon={Icon.Text} />
+            <Form.Dropdown.Item value="created" title="Date Created" icon={Icon.Calendar} />
+            <Form.Dropdown.Item value="modified" title="Date Modified" icon={Icon.Clock} />
+          </Form.Dropdown>
+          <Form.Description
+            title="Preview"
+            text={(() => {
+              const p = enumPrefix.trim();
+              const s = enumSeparator || "-";
+              const n = (enumStart || "1").padStart(parseInt(enumPad) || 3, "0");
+              return p ? `${p}${s}${n}.ext` : `${n}.ext`;
+            })()}
+          />
         </>
       )}
 

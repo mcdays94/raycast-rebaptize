@@ -1,7 +1,7 @@
 import { stat } from "fs/promises";
 import { extname, join } from "path";
 
-export type RenameMode = "tv-show" | "anime" | "movie" | "sequential" | "date" | "find-replace" | "change-extension";
+export type RenameMode = "tv-show" | "anime" | "movie" | "sequential" | "date" | "find-replace" | "change-extension" | "change-case" | "swap-delimiter" | "enumerate";
 
 export interface RenameOptions {
   mode: RenameMode;
@@ -34,6 +34,18 @@ export interface RenameOptions {
   // Change extension mode
   fromExtension?: string; // filter: only change files with this extension (empty = all)
   toExtension?: string;
+  // Change case mode
+  caseType?: "uppercase" | "lowercase" | "titlecase" | "sentencecase";
+  fixSpaces?: boolean; // collapse multiple spaces into one
+  // Swap delimiter mode
+  fromDelimiter?: string;
+  toDelimiter?: string;
+  // Enumerate mode
+  enumPrefix?: string;
+  enumStart?: number;
+  enumPad?: number;
+  enumSeparator?: string;
+  enumSortBy?: "name" | "created" | "modified";
   // Find & Replace mode
   find?: string;
   replace?: string;
@@ -148,6 +160,71 @@ export function generateChangedExtension(fileName: string, fromExt: string, toEx
   return nameWithoutExt + normalizedTo;
 }
 
+// Case conversion (operates on filename without extension)
+const TITLE_CASE_LOWERCASE = new Set([
+  "a", "an", "the", "and", "but", "or", "nor", "for", "yet", "so",
+  "in", "on", "at", "to", "by", "of", "up", "as", "is", "if", "it",
+  "vs", "via",
+]);
+
+export function generateCaseName(fileName: string, caseType: string, fixSpaces: boolean): string {
+  const ext = extname(fileName);
+  let name = fileName.slice(0, fileName.length - ext.length);
+
+  if (fixSpaces) {
+    name = name.replace(/\s{2,}/g, " ").trim();
+  }
+
+  switch (caseType) {
+    case "uppercase":
+      name = name.toUpperCase();
+      break;
+    case "lowercase":
+      name = name.toLowerCase();
+      break;
+    case "titlecase":
+      name = name
+        .split(/(\s+)/)
+        .map((part, i) => {
+          if (/^\s+$/.test(part)) return part; // preserve whitespace
+          const lower = part.toLowerCase();
+          if (i > 0 && TITLE_CASE_LOWERCASE.has(lower)) return lower;
+          return lower.charAt(0).toUpperCase() + lower.slice(1);
+        })
+        .join("");
+      break;
+    case "sentencecase":
+      name = name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+      break;
+  }
+
+  return name + ext;
+}
+
+// Swap delimiters in filename (e.g. dots to spaces, underscores to dashes)
+export function generateSwapDelimiterName(fileName: string, fromDel: string, toDel: string): string {
+  const ext = extname(fileName);
+  let name = fileName.slice(0, fileName.length - ext.length);
+
+  if (fromDel) {
+    // Escape for regex
+    const escaped = fromDel.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    name = name.replace(new RegExp(escaped, "g"), toDel);
+  }
+
+  return name + ext;
+}
+
+// Enumerate: prefix-001.ext (index passed in, sorting handled externally)
+export function generateEnumerateName(fileName: string, prefix: string, index: number, pad: number, separator: string): string {
+  const ext = extname(fileName);
+  const num = String(index).padStart(pad, "0");
+  if (prefix) {
+    return `${prefix}${separator}${num}${ext}`;
+  }
+  return `${num}${ext}`;
+}
+
 // Find & Replace on the filename (preserves extension)
 export function generateFindReplaceName(fileName: string, find: string, replace: string, useRegex: boolean): string {
   const ext = extname(fileName);
@@ -233,6 +310,29 @@ export async function generatePreviews(
           fileName,
           options.fromExtension ?? "",
           options.toExtension ?? "",
+        );
+        break;
+      case "change-case":
+        renamed = generateCaseName(
+          fileName,
+          options.caseType ?? "lowercase",
+          options.fixSpaces ?? true,
+        );
+        break;
+      case "swap-delimiter":
+        renamed = generateSwapDelimiterName(
+          fileName,
+          options.fromDelimiter ?? ".",
+          options.toDelimiter ?? " ",
+        );
+        break;
+      case "enumerate":
+        renamed = generateEnumerateName(
+          fileName,
+          options.enumPrefix ?? "",
+          (options.enumStart ?? 1) + i,
+          options.enumPad ?? 3,
+          options.enumSeparator ?? "-",
         );
         break;
     }
