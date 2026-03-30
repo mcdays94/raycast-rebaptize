@@ -44,6 +44,32 @@ declare namespace Preferences {
   export type PresetAutoEnumerate = ExtensionPreferences & {}
   /** Preferences accessible in the `preset-change-extension` command */
   export type PresetChangeExtension = ExtensionPreferences & {}
+  /** Preferences accessible in the `instant-uppercase` command */
+  export type InstantUppercase = ExtensionPreferences & {}
+  /** Preferences accessible in the `instant-lowercase` command */
+  export type InstantLowercase = ExtensionPreferences & {}
+  /** Preferences accessible in the `instant-titlecase` command */
+  export type InstantTitlecase = ExtensionPreferences & {}
+  /** Preferences accessible in the `instant-sentencecase` command */
+  export type InstantSentencecase = ExtensionPreferences & {}
+  /** Preferences accessible in the `instant-dots-to-spaces` command */
+  export type InstantDotsToSpaces = ExtensionPreferences & {}
+  /** Preferences accessible in the `instant-spaces-to-dots` command */
+  export type InstantSpacesToDots = ExtensionPreferences & {}
+  /** Preferences accessible in the `instant-underscores-to-spaces` command */
+  export type InstantUnderscoresToSpaces = ExtensionPreferences & {}
+  /** Preferences accessible in the `instant-spaces-to-underscores` command */
+  export type InstantSpacesToUnderscores = ExtensionPreferences & {}
+  /** Preferences accessible in the `instant-dashes-to-spaces` command */
+  export type InstantDashesToSpaces = ExtensionPreferences & {}
+  /** Preferences accessible in the `instant-spaces-to-dashes` command */
+  export type InstantSpacesToDashes = ExtensionPreferences & {}
+  /** Preferences accessible in the `instant-collapse-spaces` command */
+  export type InstantCollapseSpaces = ExtensionPreferences & {}
+  /** Preferences accessible in the `instant-enumerate-by-name` command */
+  export type InstantEnumerateByName = ExtensionPreferences & {}
+  /** Preferences accessible in the `instant-enumerate-by-date` command */
+  export type InstantEnumerateByDate = ExtensionPreferences & {}
 }
 
 declare namespace Arguments {
@@ -75,5 +101,31 @@ declare namespace Arguments {
   export type PresetAutoEnumerate = {}
   /** Arguments passed to the `preset-change-extension` command */
   export type PresetChangeExtension = {}
+  /** Arguments passed to the `instant-uppercase` command */
+  export type InstantUppercase = {}
+  /** Arguments passed to the `instant-lowercase` command */
+  export type InstantLowercase = {}
+  /** Arguments passed to the `instant-titlecase` command */
+  export type InstantTitlecase = {}
+  /** Arguments passed to the `instant-sentencecase` command */
+  export type InstantSentencecase = {}
+  /** Arguments passed to the `instant-dots-to-spaces` command */
+  export type InstantDotsToSpaces = {}
+  /** Arguments passed to the `instant-spaces-to-dots` command */
+  export type InstantSpacesToDots = {}
+  /** Arguments passed to the `instant-underscores-to-spaces` command */
+  export type InstantUnderscoresToSpaces = {}
+  /** Arguments passed to the `instant-spaces-to-underscores` command */
+  export type InstantSpacesToUnderscores = {}
+  /** Arguments passed to the `instant-dashes-to-spaces` command */
+  export type InstantDashesToSpaces = {}
+  /** Arguments passed to the `instant-spaces-to-dashes` command */
+  export type InstantSpacesToDashes = {}
+  /** Arguments passed to the `instant-collapse-spaces` command */
+  export type InstantCollapseSpaces = {}
+  /** Arguments passed to the `instant-enumerate-by-name` command */
+  export type InstantEnumerateByName = {}
+  /** Arguments passed to the `instant-enumerate-by-date` command */
+  export type InstantEnumerateByDate = {}
 }
 

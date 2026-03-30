@@ -106,6 +106,97 @@
       "subtitle": "Rebaptize",
       "description": "Bulk change file extensions (e.g. .jpeg to .jpg)",
       "mode": "view"
+    },
+    {
+      "name": "instant-uppercase",
+      "title": "Uppercase All Filenames",
+      "subtitle": "Rebaptize",
+      "description": "Instantly convert all filenames in the current Finder folder to UPPERCASE",
+      "mode": "no-view"
+    },
+    {
+      "name": "instant-lowercase",
+      "title": "Lowercase All Filenames",
+      "subtitle": "Rebaptize",
+      "description": "Instantly convert all filenames in the current Finder folder to lowercase",
+      "mode": "no-view"
+    },
+    {
+      "name": "instant-titlecase",
+      "title": "Title Case All Filenames",
+      "subtitle": "Rebaptize",
+      "description": "Instantly capitalize the first letter of every word in filenames",
+      "mode": "no-view"
+    },
+    {
+      "name": "instant-sentencecase",
+      "title": "Sentence Case All Filenames",
+      "subtitle": "Rebaptize",
+      "description": "Instantly capitalize only the first letter of each filename",
+      "mode": "no-view"
+    },
+    {
+      "name": "instant-dots-to-spaces",
+      "title": "Replace Dots with Spaces",
+      "subtitle": "Rebaptize",
+      "description": "Instantly replace all dots in filenames with spaces",
+      "mode": "no-view"
+    },
+    {
+      "name": "instant-spaces-to-dots",
+      "title": "Replace Spaces with Dots",
+      "subtitle": "Rebaptize",
+      "description": "Instantly replace all spaces in filenames with dots",
+      "mode": "no-view"
+    },
+    {
+      "name": "instant-underscores-to-spaces",
+      "title": "Replace Underscores with Spaces",
+      "subtitle": "Rebaptize",
+      "description": "Instantly replace all underscores in filenames with spaces",
+      "mode": "no-view"
+    },
+    {
+      "name": "instant-spaces-to-underscores",
+      "title": "Replace Spaces with Underscores",
+      "subtitle": "Rebaptize",
+      "description": "Instantly replace all spaces in filenames with underscores",
+      "mode": "no-view"
+    },
+    {
+      "name": "instant-dashes-to-spaces",
+      "title": "Replace Dashes with Spaces",
+      "subtitle": "Rebaptize",
+      "description": "Instantly replace all dashes in filenames with spaces",
+      "mode": "no-view"
+    },
+    {
+      "name": "instant-spaces-to-dashes",
+      "title": "Replace Spaces with Dashes",
+      "subtitle": "Rebaptize",
+      "description": "Instantly replace all spaces in filenames with dashes",
+      "mode": "no-view"
+    },
+    {
+      "name": "instant-collapse-spaces",
+      "title": "Collapse Multiple Spaces",
+      "subtitle": "Rebaptize",
+      "description": "Instantly collapse double/triple/etc spaces into single spaces in filenames",
+      "mode": "no-view"
+    },
+    {
+      "name": "instant-enumerate-by-name",
+      "title": "Enumerate Files by Name",
+      "subtitle": "Rebaptize",
+      "description": "Instantly number files 001, 002, 003... sorted alphabetically by name",
+      "mode": "no-view"
+    },
+    {
+      "name": "instant-enumerate-by-date",
+      "title": "Enumerate Files by Date Created",
+      "subtitle": "Rebaptize",
+      "description": "Instantly number files 001, 002, 003... sorted by creation date (oldest first)",
+      "mode": "no-view"
     }
   ],
   "preferences": [
