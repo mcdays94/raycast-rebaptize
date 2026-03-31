@@ -60,10 +60,7 @@ export async function getFinderFiles(): Promise<{ folderPath: string; files: str
  * Run an instant rename: apply transform, execute immediately, save undo state.
  * No confirmation dialog, no UI — runs instantly and shows a HUD.
  */
-export async function runInstantRename(
-  transform: (fileName: string) => string,
-  actionName: string,
-): Promise<void> {
+export async function runInstantRename(transform: (fileName: string) => string, actionName: string): Promise<void> {
   try {
     const { folderPath, files } = await getFinderFiles();
 

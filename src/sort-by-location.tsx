@@ -8,7 +8,6 @@ import {
   Toast,
   useNavigation,
   confirmAlert,
-  Alert,
   Color,
 } from "@raycast/api";
 import { useState, useEffect } from "react";
@@ -44,7 +43,10 @@ function PreviewGroups({
 
     const confirmed = await confirmAlert({
       title: `${actionVerb} ${fileCount} files into ${groupsToOrganize.length} folders?`,
-      message: action === "move" ? "You can undo this with the 'Undo Last Rename' command." : "Files will be copied into subfolders.",
+      message:
+        action === "move"
+          ? "You can undo this with the 'Undo Last Rename' command."
+          : "Files will be copied into subfolders.",
       primaryAction: { title: actionVerb },
     });
     if (!confirmed) return;
@@ -154,14 +156,7 @@ export default function SortByLocation() {
 
       toast.hide();
 
-      push(
-        <PreviewGroups
-          folderPath={folderPath}
-          groups={groups}
-          action={action}
-          noLocationCount={noLocationCount}
-        />,
-      );
+      push(<PreviewGroups folderPath={folderPath} groups={groups} action={action} noLocationCount={noLocationCount} />);
     } catch (error) {
       await showToast({
         style: Toast.Style.Failure,
@@ -173,7 +168,6 @@ export default function SortByLocation() {
 
   return (
     <Form
-      
       actions={
         <ActionPanel>
           <Action.SubmitForm title="Scan Photos" icon={Icon.MagnifyingGlass} onSubmit={handleSubmit} />
@@ -187,7 +181,11 @@ export default function SortByLocation() {
         canChooseDirectories
         canChooseFiles={false}
         defaultValue={detectedFolder ? [detectedFolder] : undefined}
-        info={detectedFolder ? `Auto-detected from Finder: ${detectedFolder}` : "Open a Finder window or select a folder manually"}
+        info={
+          detectedFolder
+            ? `Auto-detected from Finder: ${detectedFolder}`
+            : "Open a Finder window or select a folder manually"
+        }
       />
 
       <Form.Dropdown
@@ -201,12 +199,7 @@ export default function SortByLocation() {
         <Form.Dropdown.Item value="country" title="Country" icon={Icon.Globe} />
       </Form.Dropdown>
 
-      <Form.Dropdown
-        id="action"
-        title="File Action"
-        value={action}
-        onChange={(v) => setAction(v as FileAction)}
-      >
+      <Form.Dropdown id="action" title="File Action" value={action} onChange={(v) => setAction(v as FileAction)}>
         <Form.Dropdown.Item value="move" title="Move Files" icon={Icon.ArrowRight} />
         <Form.Dropdown.Item value="copy" title="Copy Files" icon={Icon.CopyClipboard} />
       </Form.Dropdown>

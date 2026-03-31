@@ -1,15 +1,4 @@
-import {
-  ActionPanel,
-  Action,
-  Form,
-  List,
-  Icon,
-  showToast,
-  Toast,
-  useNavigation,
-  Color,
-  showHUD,
-} from "@raycast/api";
+import { ActionPanel, Action, Form, List, Icon, showToast, Toast, useNavigation, Color, showHUD } from "@raycast/api";
 import { useState } from "react";
 import { randomUUID } from "crypto";
 import {
@@ -166,40 +155,108 @@ function StepForm({ onSubmit, existing }: { onSubmit: (step: ScriptStep) => void
 
       {stepType === "change-extension" && (
         <>
-          <Form.TextField id="fromExt" title="From Extension" placeholder="jpeg (empty = all)" value={fromExt} onChange={setFromExt} />
+          <Form.TextField
+            id="fromExt"
+            title="From Extension"
+            placeholder="jpeg (empty = all)"
+            value={fromExt}
+            onChange={setFromExt}
+          />
           <Form.TextField id="toExt" title="To Extension" placeholder="jpg" value={toExt} onChange={setToExt} />
         </>
       )}
 
       {stepType === "tv-show" && (
         <>
-          <Form.TextField id="showName" title="Show Name" placeholder="Breaking Bad" value={showName} onChange={setShowName} />
-          <Form.TextField id="season" title="Default Season" placeholder="1" value={season} onChange={setSeason} info="Used for files without season info in their name. Files with existing SxxExx are preserved." />
-          <Form.TextField id="startEp" title="Default Start Episode" placeholder="1" value={startEp} onChange={setStartEp} info="Used for files without episode info in their name." />
+          <Form.TextField
+            id="showName"
+            title="Show Name"
+            placeholder="Breaking Bad"
+            value={showName}
+            onChange={setShowName}
+          />
+          <Form.TextField
+            id="season"
+            title="Default Season"
+            placeholder="1"
+            value={season}
+            onChange={setSeason}
+            info="Used for files without season info in their name. Files with existing SxxExx are preserved."
+          />
+          <Form.TextField
+            id="startEp"
+            title="Default Start Episode"
+            placeholder="1"
+            value={startEp}
+            onChange={setStartEp}
+            info="Used for files without episode info in their name."
+          />
           <Form.Dropdown id="wordDel" title="Word Separator" value={wordDel} onChange={setWordDel}>
             <Form.Dropdown.Item value=" " title="Space" />
             <Form.Dropdown.Item value="." title="Dot" />
             <Form.Dropdown.Item value="_" title="Underscore" />
             <Form.Dropdown.Item value="-" title="Dash" />
           </Form.Dropdown>
-          <Form.TextField id="suffix" title="Suffix (Optional)" placeholder="1080p" value={suffix} onChange={setSuffix} />
+          <Form.TextField
+            id="suffix"
+            title="Suffix (Optional)"
+            placeholder="1080p"
+            value={suffix}
+            onChange={setSuffix}
+          />
         </>
       )}
 
       {stepType === "anime" && (
         <>
-          <Form.TextField id="animeName" title="Anime Name" placeholder="Jujutsu Kaisen" value={animeName} onChange={setAnimeName} />
-          <Form.TextField id="startAnimeEp" title="Start Episode" placeholder="1" value={startAnimeEp} onChange={setStartAnimeEp} />
-          <Form.TextField id="group" title="Sub Group (Optional)" placeholder="SubsPlease" value={group} onChange={setGroup} />
-          <Form.TextField id="quality" title="Quality (Optional)" placeholder="1080p" value={quality} onChange={setQuality} />
+          <Form.TextField
+            id="animeName"
+            title="Anime Name"
+            placeholder="Jujutsu Kaisen"
+            value={animeName}
+            onChange={setAnimeName}
+          />
+          <Form.TextField
+            id="startAnimeEp"
+            title="Start Episode"
+            placeholder="1"
+            value={startAnimeEp}
+            onChange={setStartAnimeEp}
+          />
+          <Form.TextField
+            id="group"
+            title="Sub Group (Optional)"
+            placeholder="SubsPlease"
+            value={group}
+            onChange={setGroup}
+          />
+          <Form.TextField
+            id="quality"
+            title="Quality (Optional)"
+            placeholder="1080p"
+            value={quality}
+            onChange={setQuality}
+          />
         </>
       )}
 
       {stepType === "movie" && (
         <>
-          <Form.TextField id="movieName" title="Movie Name" placeholder="Interstellar" value={movieName} onChange={setMovieName} />
+          <Form.TextField
+            id="movieName"
+            title="Movie Name"
+            placeholder="Interstellar"
+            value={movieName}
+            onChange={setMovieName}
+          />
           <Form.TextField id="year" title="Year" placeholder="2014" value={year} onChange={setYear} />
-          <Form.TextField id="movieQuality" title="Quality" placeholder="1080p" value={movieQuality} onChange={setMovieQuality} />
+          <Form.TextField
+            id="movieQuality"
+            title="Quality"
+            placeholder="1080p"
+            value={movieQuality}
+            onChange={setMovieQuality}
+          />
         </>
       )}
 
@@ -227,7 +284,10 @@ function StepForm({ onSubmit, existing }: { onSubmit: (step: ScriptStep) => void
 
 // ─── Main Create Script Command ───
 
-export default function CreateScript({ existingScript, onSaved }: { existingScript?: RenameScript; onSaved?: () => void } = {}) {
+export default function CreateScript({
+  existingScript,
+  onSaved,
+}: { existingScript?: RenameScript; onSaved?: () => void } = {}) {
   const { push, pop } = useNavigation();
   const isEditing = !!existingScript;
   const [scriptId] = useState(existingScript?.id ?? randomUUID());
@@ -359,8 +419,18 @@ export default function CreateScript({ existingScript, onSaved }: { existingScri
       actions={
         <ActionPanel>
           <Action title="Add Step" icon={Icon.Plus} onAction={() => push(<StepForm onSubmit={addStep} />)} />
-          <Action title="Preview on Finder Folder" icon={Icon.Eye} onAction={handlePreview} shortcut={{ modifiers: ["cmd", "shift"], key: "p" }} />
-          <Action title="Save Script" icon={Icon.SaveDocument} onAction={handleSave} shortcut={{ modifiers: ["cmd"], key: "s" }} />
+          <Action
+            title="Preview on Finder Folder"
+            icon={Icon.Eye}
+            onAction={handlePreview}
+            shortcut={{ modifiers: ["cmd", "shift"], key: "p" }}
+          />
+          <Action
+            title="Save Script"
+            icon={Icon.SaveDocument}
+            onAction={handleSave}
+            shortcut={{ modifiers: ["cmd"], key: "s" }}
+          />
         </ActionPanel>
       }
     >
@@ -393,8 +463,18 @@ export default function CreateScript({ existingScript, onSaved }: { existingScri
                         </ActionPanel>
                       }
                     >
-                      <Form.TextField id="name" title="Script Name" placeholder="Clean MKV files" defaultValue={scriptName} />
-                      <Form.TextField id="desc" title="Description" placeholder="Swap dots, title case, rename as TV show" defaultValue={description} />
+                      <Form.TextField
+                        id="name"
+                        title="Script Name"
+                        placeholder="Clean MKV files"
+                        defaultValue={scriptName}
+                      />
+                      <Form.TextField
+                        id="desc"
+                        title="Description"
+                        placeholder="Swap dots, title case, rename as TV show"
+                        defaultValue={description}
+                      />
                       <Form.TextField
                         id="filter"
                         title="File Filter"
@@ -406,9 +486,24 @@ export default function CreateScript({ existingScript, onSaved }: { existingScri
                   )
                 }
               />
-              <Action title="Add Step" icon={Icon.Plus} onAction={() => push(<StepForm onSubmit={addStep} />)} shortcut={{ modifiers: ["cmd"], key: "n" }} />
-              <Action title="Preview on Finder Folder" icon={Icon.Eye} onAction={handlePreview} shortcut={{ modifiers: ["cmd", "shift"], key: "p" }} />
-              <Action title="Save Script" icon={Icon.SaveDocument} onAction={handleSave} shortcut={{ modifiers: ["cmd"], key: "s" }} />
+              <Action
+                title="Add Step"
+                icon={Icon.Plus}
+                onAction={() => push(<StepForm onSubmit={addStep} />)}
+                shortcut={{ modifiers: ["cmd"], key: "n" }}
+              />
+              <Action
+                title="Preview on Finder Folder"
+                icon={Icon.Eye}
+                onAction={handlePreview}
+                shortcut={{ modifiers: ["cmd", "shift"], key: "p" }}
+              />
+              <Action
+                title="Save Script"
+                icon={Icon.SaveDocument}
+                onAction={handleSave}
+                shortcut={{ modifiers: ["cmd"], key: "s" }}
+              />
             </ActionPanel>
           }
         />
@@ -435,13 +530,48 @@ export default function CreateScript({ existingScript, onSaved }: { existingScri
             subtitle={stepLabel(step)}
             actions={
               <ActionPanel>
-                <Action title="Edit Step" icon={Icon.Pencil} onAction={() => push(<StepForm existing={step} onSubmit={(updated) => editStep(i, updated)} />)} />
-                <Action title="Add Step" icon={Icon.Plus} onAction={() => push(<StepForm onSubmit={addStep} />)} shortcut={{ modifiers: ["cmd"], key: "n" }} />
-                <Action title="Move Up" icon={Icon.ArrowUp} onAction={() => moveStepUp(i)} shortcut={{ modifiers: ["cmd", "shift"], key: "arrowUp" }} />
-                <Action title="Move Down" icon={Icon.ArrowDown} onAction={() => moveStepDown(i)} shortcut={{ modifiers: ["cmd", "shift"], key: "arrowDown" }} />
-                <Action title="Remove Step" icon={Icon.Trash} style={Action.Style.Destructive} onAction={() => removeStep(i)} shortcut={{ modifiers: ["cmd"], key: "backspace" }} />
-                <Action title="Preview on Finder Folder" icon={Icon.Eye} onAction={handlePreview} shortcut={{ modifiers: ["cmd", "shift"], key: "p" }} />
-                <Action title="Save Script" icon={Icon.SaveDocument} onAction={handleSave} shortcut={{ modifiers: ["cmd"], key: "s" }} />
+                <Action
+                  title="Edit Step"
+                  icon={Icon.Pencil}
+                  onAction={() => push(<StepForm existing={step} onSubmit={(updated) => editStep(i, updated)} />)}
+                />
+                <Action
+                  title="Add Step"
+                  icon={Icon.Plus}
+                  onAction={() => push(<StepForm onSubmit={addStep} />)}
+                  shortcut={{ modifiers: ["cmd"], key: "n" }}
+                />
+                <Action
+                  title="Move up"
+                  icon={Icon.ArrowUp}
+                  onAction={() => moveStepUp(i)}
+                  shortcut={{ modifiers: ["cmd", "shift"], key: "arrowUp" }}
+                />
+                <Action
+                  title="Move Down"
+                  icon={Icon.ArrowDown}
+                  onAction={() => moveStepDown(i)}
+                  shortcut={{ modifiers: ["cmd", "shift"], key: "arrowDown" }}
+                />
+                <Action
+                  title="Remove Step"
+                  icon={Icon.Trash}
+                  style={Action.Style.Destructive}
+                  onAction={() => removeStep(i)}
+                  shortcut={{ modifiers: ["cmd"], key: "backspace" }}
+                />
+                <Action
+                  title="Preview on Finder Folder"
+                  icon={Icon.Eye}
+                  onAction={handlePreview}
+                  shortcut={{ modifiers: ["cmd", "shift"], key: "p" }}
+                />
+                <Action
+                  title="Save Script"
+                  icon={Icon.SaveDocument}
+                  onAction={handleSave}
+                  shortcut={{ modifiers: ["cmd"], key: "s" }}
+                />
               </ActionPanel>
             }
           />

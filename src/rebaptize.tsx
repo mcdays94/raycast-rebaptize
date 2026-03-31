@@ -8,7 +8,6 @@ import {
   Toast,
   useNavigation,
   confirmAlert,
-  Alert,
   Color,
 } from "@raycast/api";
 import { useState, useEffect } from "react";
@@ -95,8 +94,7 @@ export default function Rebaptize({ initialMode }: { initialMode?: RenameMode } 
 
   const lockedMode = initialMode !== undefined;
   const [folderPath, setFolderPath] = useState<string | null>(null);
-  const [analysis, setAnalysis] = useState<FileAnalysis | null>(null);
-  const [analyzed, setAnalyzed] = useState(false);
+
   const [mode, setMode] = useState<RenameMode>(initialMode ?? "sequential");
   const [suggestionNote, setSuggestionNote] = useState("");
 
@@ -113,7 +111,7 @@ export default function Rebaptize({ initialMode }: { initialMode?: RenameMode } 
 
   // Anime
   const [animeName, setAnimeName] = useState("");
-  const [animeSeason, setAnimeSeason] = useState("1");
+  const animeSeason = "1";
   const [startAnimeEpisode, setStartAnimeEpisode] = useState("1");
   const [group, setGroup] = useState("");
   const [quality, setQuality] = useState("");
@@ -171,11 +169,9 @@ export default function Rebaptize({ initialMode }: { initialMode?: RenameMode } 
   async function runAnalysis(folder: string) {
     try {
       const result = await analyzeFolder(folder);
-      setAnalysis(result);
-      setAnalyzed(true);
       applySmartDefaults(result);
     } catch {
-      setAnalyzed(true);
+      // Analysis failed, continue with defaults
     }
   }
 
@@ -200,7 +196,9 @@ export default function Rebaptize({ initialMode }: { initialMode?: RenameMode } 
         }
         if (name) notes.push(`Show name: "${name}"`);
         if (a.detectedSeasons.length > 1) {
-          notes.push(`${a.detectedSeasons.length} seasons detected (${a.detectedSeasons.join(", ")}) — use Smart Organize Episodes for multi-season sorting`);
+          notes.push(
+            `${a.detectedSeasons.length} seasons detected (${a.detectedSeasons.join(", ")}) — use Smart Organize Episodes for multi-season sorting`,
+          );
         } else if (a.detectedSeasons.length === 1) {
           notes.push(`Season ${a.detectedSeasons[0]}`);
         }
@@ -352,9 +350,11 @@ export default function Rebaptize({ initialMode }: { initialMode?: RenameMode } 
             );
             switch (enumSortBy) {
               case "created":
-                fileStats.sort((a, b) =>
-                  (a.stat.birthtime.getTime() > 0 ? a.stat.birthtime.getTime() : a.stat.mtime.getTime()) -
-                  (b.stat.birthtime.getTime() > 0 ? b.stat.birthtime.getTime() : b.stat.mtime.getTime()));
+                fileStats.sort(
+                  (a, b) =>
+                    (a.stat.birthtime.getTime() > 0 ? a.stat.birthtime.getTime() : a.stat.mtime.getTime()) -
+                    (b.stat.birthtime.getTime() > 0 ? b.stat.birthtime.getTime() : b.stat.mtime.getTime()),
+                );
                 break;
               case "modified":
                 fileStats.sort((a, b) => a.stat.mtime.getTime() - b.stat.mtime.getTime());
@@ -435,7 +435,6 @@ export default function Rebaptize({ initialMode }: { initialMode?: RenameMode } 
 
   return (
     <Form
-      
       actions={
         <ActionPanel>
           <Action.SubmitForm title="Preview Renames" icon={Icon.Eye} onSubmit={handleSubmit} />
@@ -452,13 +451,15 @@ export default function Rebaptize({ initialMode }: { initialMode?: RenameMode } 
         canChooseFiles={false}
         defaultValue={folderPath ? [folderPath] : undefined}
         onChange={onFolderChange}
-        info={folderPath ? `Auto-detected from Finder: ${folderPath}` : "Open a Finder window or select a folder manually"}
+        info={
+          folderPath ? `Auto-detected from Finder: ${folderPath}` : "Open a Finder window or select a folder manually"
+        }
       />
 
       <Form.Dropdown id="mode" title="Preset" value={mode} onChange={(v) => setMode(v as RenameMode)}>
-        <Form.Dropdown.Item value="tv-show" title="TV Show (S01E01)" icon={Icon.Tv} />
+        <Form.Dropdown.Item value="tv-show" title="TV Show (S01E01)" icon={Icon.Monitor} />
         <Form.Dropdown.Item value="anime" title="Anime ([Group] Name - 01)" icon={Icon.Stars} />
-        <Form.Dropdown.Item value="movie" title="Movie (Name.Year.Quality)" icon={Icon.Film} />
+        <Form.Dropdown.Item value="movie" title="Movie (Name.Year.Quality)" icon={Icon.FilmStrip} />
         <Form.Dropdown.Item value="sequential" title="Sequential (Prefix-001)" icon={Icon.NumberList} />
         <Form.Dropdown.Item value="date" title="Date-Based" icon={Icon.Calendar} />
         <Form.Dropdown.Item value="change-case" title="Change Case" icon={Icon.Text} />
@@ -472,7 +473,13 @@ export default function Rebaptize({ initialMode }: { initialMode?: RenameMode } 
 
       {mode === "tv-show" && (
         <>
-          <Form.TextField id="showName" title="Show Name" placeholder="Breaking Bad" value={showName} onChange={setShowName} />
+          <Form.TextField
+            id="showName"
+            title="Show Name"
+            placeholder="Breaking Bad"
+            value={showName}
+            onChange={setShowName}
+          />
           <Form.Checkbox
             id="overrideSeason"
             label="Override season/episode from filenames"
@@ -486,7 +493,11 @@ export default function Rebaptize({ initialMode }: { initialMode?: RenameMode } 
             placeholder="1"
             value={season}
             onChange={setSeason}
-            info={overrideSeason ? "All files will use this season number" : "Only used for files without season info in their name (e.g. 001.mkv)"}
+            info={
+              overrideSeason
+                ? "All files will use this season number"
+                : "Only used for files without season info in their name (e.g. 001.mkv)"
+            }
           />
           <Form.TextField
             id="startEpisode"
@@ -494,7 +505,11 @@ export default function Rebaptize({ initialMode }: { initialMode?: RenameMode } 
             placeholder="1"
             value={startEpisode}
             onChange={setStartEpisode}
-            info={overrideSeason ? "First episode number, incrementing for each file" : "Only used for files without episode info in their name"}
+            info={
+              overrideSeason
+                ? "First episode number, incrementing for each file"
+                : "Only used for files without episode info in their name"
+            }
           />
           <Form.Dropdown id="wordDelimiter" title="Word Separator" value={wordDelimiter} onChange={setWordDelimiter}>
             <Form.Dropdown.Item value=" " title="Space ( )" />
@@ -504,29 +519,83 @@ export default function Rebaptize({ initialMode }: { initialMode?: RenameMode } 
             <Form.Dropdown.Item value="custom" title="Custom..." />
           </Form.Dropdown>
           {wordDelimiter === "custom" && (
-            <Form.TextField id="customDelimiter" title="Custom Separator" placeholder=" - " value={customDelimiter} onChange={setCustomDelimiter} />
+            <Form.TextField
+              id="customDelimiter"
+              title="Custom Separator"
+              placeholder=" - "
+              value={customDelimiter}
+              onChange={setCustomDelimiter}
+            />
           )}
-          <Form.TextField id="suffix" title="Suffix (Optional)" placeholder="1080p PROPER" value={suffix} onChange={setSuffix} info="Added after S01E01. e.g. 1080p, PROPER, BluRay" />
+          <Form.TextField
+            id="suffix"
+            title="Suffix (Optional)"
+            placeholder="1080p PROPER"
+            value={suffix}
+            onChange={setSuffix}
+            info="Added after S01E01. e.g. 1080p, PROPER, BluRay"
+          />
           <Form.Description title="Preview" text={tvPreview()} />
         </>
       )}
 
       {mode === "anime" && (
         <>
-          <Form.TextField id="animeName" title="Anime Name" placeholder="Jujutsu Kaisen" value={animeName} onChange={setAnimeName} />
-          <Form.TextField id="startAnimeEpisode" title="Start Episode" placeholder="1" value={startAnimeEpisode} onChange={setStartAnimeEpisode} />
-          <Form.TextField id="group" title="Sub Group (Optional)" placeholder="SubsPlease" value={group} onChange={setGroup} />
-          <Form.TextField id="quality" title="Quality (Optional)" placeholder="1080p" value={quality} onChange={setQuality} />
+          <Form.TextField
+            id="animeName"
+            title="Anime Name"
+            placeholder="Jujutsu Kaisen"
+            value={animeName}
+            onChange={setAnimeName}
+          />
+          <Form.TextField
+            id="startAnimeEpisode"
+            title="Start Episode"
+            placeholder="1"
+            value={startAnimeEpisode}
+            onChange={setStartAnimeEpisode}
+          />
+          <Form.TextField
+            id="group"
+            title="Sub Group (Optional)"
+            placeholder="SubsPlease"
+            value={group}
+            onChange={setGroup}
+          />
+          <Form.TextField
+            id="quality"
+            title="Quality (Optional)"
+            placeholder="1080p"
+            value={quality}
+            onChange={setQuality}
+          />
           <Form.Description title="Preview" text={animePreview()} />
         </>
       )}
 
       {mode === "movie" && (
         <>
-          <Form.TextField id="movieName" title="Movie Name" placeholder="Interstellar" value={movieName} onChange={setMovieName} />
+          <Form.TextField
+            id="movieName"
+            title="Movie Name"
+            placeholder="Interstellar"
+            value={movieName}
+            onChange={setMovieName}
+          />
           <Form.TextField id="year" title="Year (Optional)" placeholder="2014" value={year} onChange={setYear} />
-          <Form.TextField id="movieQuality" title="Quality (Optional)" placeholder="1080p" value={movieQuality} onChange={setMovieQuality} />
-          <Form.Dropdown id="wordDelimiterMovie" title="Word Separator" value={wordDelimiter} onChange={setWordDelimiter}>
+          <Form.TextField
+            id="movieQuality"
+            title="Quality (Optional)"
+            placeholder="1080p"
+            value={movieQuality}
+            onChange={setMovieQuality}
+          />
+          <Form.Dropdown
+            id="wordDelimiterMovie"
+            title="Word Separator"
+            value={wordDelimiter}
+            onChange={setWordDelimiter}
+          >
             <Form.Dropdown.Item value=" " title="Space ( )" />
             <Form.Dropdown.Item value="." title="Dot (.)" />
             <Form.Dropdown.Item value="_" title="Underscore (_)" />
@@ -534,7 +603,13 @@ export default function Rebaptize({ initialMode }: { initialMode?: RenameMode } 
             <Form.Dropdown.Item value="custom" title="Custom..." />
           </Form.Dropdown>
           {wordDelimiter === "custom" && (
-            <Form.TextField id="customDelimiterMovie" title="Custom Separator" placeholder=" - " value={customDelimiter} onChange={setCustomDelimiter} />
+            <Form.TextField
+              id="customDelimiterMovie"
+              title="Custom Separator"
+              placeholder=" - "
+              value={customDelimiter}
+              onChange={setCustomDelimiter}
+            />
           )}
           <Form.Description title="Preview" text={moviePreview()} />
         </>
@@ -543,7 +618,13 @@ export default function Rebaptize({ initialMode }: { initialMode?: RenameMode } 
       {mode === "sequential" && (
         <>
           <Form.TextField id="prefix" title="Prefix" placeholder="Vacation" value={prefix} onChange={setPrefix} />
-          <Form.TextField id="startNumber" title="Start Number" placeholder="1" value={startNumber} onChange={setStartNumber} />
+          <Form.TextField
+            id="startNumber"
+            title="Start Number"
+            placeholder="1"
+            value={startNumber}
+            onChange={setStartNumber}
+          />
           <Form.TextField id="zeroPad" title="Zero Padding" placeholder="3" value={zeroPad} onChange={setZeroPad} />
           <Form.Dropdown id="separator" title="Separator" value={separator} onChange={setSeparator}>
             <Form.Dropdown.Item value="-" title="Dash (-)" />
@@ -567,31 +648,55 @@ export default function Rebaptize({ initialMode }: { initialMode?: RenameMode } 
             <Form.Dropdown.Item value="DD-MM-YYYY" title="DD-MM-YYYY" />
             <Form.Dropdown.Item value="MM-DD-YYYY" title="MM-DD-YYYY" />
           </Form.Dropdown>
-          <Form.TextField id="datePrefix" title="Prefix (Optional)" placeholder="Trip" value={datePrefix} onChange={setDatePrefix} />
+          <Form.TextField
+            id="datePrefix"
+            title="Prefix (Optional)"
+            placeholder="Trip"
+            value={datePrefix}
+            onChange={setDatePrefix}
+          />
           <Form.Description title="Preview" text={datePreview()} />
         </>
       )}
 
       {mode === "change-case" && (
         <>
-          <Form.Dropdown id="caseType" title="Case" value={caseType} onChange={(v) => setCaseType(v as typeof caseType)}>
+          <Form.Dropdown
+            id="caseType"
+            title="Case"
+            value={caseType}
+            onChange={(v) => setCaseType(v as typeof caseType)}
+          >
             <Form.Dropdown.Item value="titlecase" title="Title Case" />
             <Form.Dropdown.Item value="uppercase" title="UPPERCASE" />
             <Form.Dropdown.Item value="lowercase" title="lowercase" />
             <Form.Dropdown.Item value="sentencecase" title="Sentence case" />
           </Form.Dropdown>
-          <Form.Checkbox id="fixSpaces" label="Collapse multiple spaces into one" value={fixSpaces} onChange={setFixSpaces} />
+          <Form.Checkbox
+            id="fixSpaces"
+            label="Collapse multiple spaces into one"
+            value={fixSpaces}
+            onChange={setFixSpaces}
+          />
           <Form.Description
             title="Preview"
             text={(() => {
               const sample = "my  show  name   S01E01";
               const fixed = fixSpaces ? sample.replace(/\s{2,}/g, " ").trim() : sample;
               switch (caseType) {
-                case "uppercase": return `${sample}\n→ ${fixed.toUpperCase()}`;
-                case "lowercase": return `${sample}\n→ ${fixed.toLowerCase()}`;
-                case "titlecase": return `${sample}\n→ ${fixed.split(/(\s+)/).map((w, i) => /^\s+$/.test(w) ? w : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join("")}`;
-                case "sentencecase": return `${sample}\n→ ${fixed.charAt(0).toUpperCase() + fixed.slice(1).toLowerCase()}`;
-                default: return sample;
+                case "uppercase":
+                  return `${sample}\n→ ${fixed.toUpperCase()}`;
+                case "lowercase":
+                  return `${sample}\n→ ${fixed.toLowerCase()}`;
+                case "titlecase":
+                  return `${sample}\n→ ${fixed
+                    .split(/(\s+)/)
+                    .map((w) => (/^\s+$/.test(w) ? w : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()))
+                    .join("")}`;
+                case "sentencecase":
+                  return `${sample}\n→ ${fixed.charAt(0).toUpperCase() + fixed.slice(1).toLowerCase()}`;
+                default:
+                  return sample;
               }
             })()}
           />
@@ -600,12 +705,27 @@ export default function Rebaptize({ initialMode }: { initialMode?: RenameMode } 
 
       {mode === "swap-delimiter" && (
         <>
-          <Form.TextField id="fromDelimiter" title="From" placeholder="." value={fromDelimiter} onChange={setFromDelimiter} info="The character(s) to find and replace in filenames" />
-          <Form.TextField id="toDelimiter" title="To" placeholder=" " value={toDelimiter} onChange={setToDelimiter} info="The replacement character(s)" />
+          <Form.TextField
+            id="fromDelimiter"
+            title="From"
+            placeholder="."
+            value={fromDelimiter}
+            onChange={setFromDelimiter}
+            info="The character(s) to find and replace in filenames"
+          />
+          <Form.TextField
+            id="toDelimiter"
+            title="To"
+            placeholder=" "
+            value={toDelimiter}
+            onChange={setToDelimiter}
+            info="The replacement character(s)"
+          />
           <Form.Description
             title="Preview"
             text={(() => {
-              const sample = fromDelimiter === "." ? "My.Show.S01E01.720p" : `My${fromDelimiter}Show${fromDelimiter}S01E01`;
+              const sample =
+                fromDelimiter === "." ? "My.Show.S01E01.720p" : `My${fromDelimiter}Show${fromDelimiter}S01E01`;
               const result = fromDelimiter ? sample.split(fromDelimiter).join(toDelimiter) : sample;
               return `${sample}.ext\n→ ${result}.ext`;
             })()}
@@ -615,8 +735,20 @@ export default function Rebaptize({ initialMode }: { initialMode?: RenameMode } 
 
       {mode === "enumerate" && (
         <>
-          <Form.TextField id="enumPrefix" title="Prefix (Optional)" placeholder="photo" value={enumPrefix} onChange={setEnumPrefix} />
-          <Form.TextField id="enumStart" title="Start Number" placeholder="1" value={enumStart} onChange={setEnumStart} />
+          <Form.TextField
+            id="enumPrefix"
+            title="Prefix (Optional)"
+            placeholder="photo"
+            value={enumPrefix}
+            onChange={setEnumPrefix}
+          />
+          <Form.TextField
+            id="enumStart"
+            title="Start Number"
+            placeholder="1"
+            value={enumStart}
+            onChange={setEnumStart}
+          />
           <Form.TextField id="enumPad" title="Zero Padding" placeholder="3" value={enumPad} onChange={setEnumPad} />
           <Form.Dropdown id="enumSeparator" title="Separator" value={enumSeparator} onChange={setEnumSeparator}>
             <Form.Dropdown.Item value="-" title="Dash (-)" />
@@ -624,7 +756,12 @@ export default function Rebaptize({ initialMode }: { initialMode?: RenameMode } 
             <Form.Dropdown.Item value="." title="Dot (.)" />
             <Form.Dropdown.Item value=" " title="Space" />
           </Form.Dropdown>
-          <Form.Dropdown id="enumSortBy" title="Sort Files By" value={enumSortBy} onChange={(v) => setEnumSortBy(v as typeof enumSortBy)}>
+          <Form.Dropdown
+            id="enumSortBy"
+            title="Sort Files By"
+            value={enumSortBy}
+            onChange={(v) => setEnumSortBy(v as typeof enumSortBy)}
+          >
             <Form.Dropdown.Item value="name" title="File Name (A-Z)" icon={Icon.Text} />
             <Form.Dropdown.Item value="created" title="Date Created (oldest first)" icon={Icon.Calendar} />
             <Form.Dropdown.Item value="modified" title="Date Modified (oldest first)" icon={Icon.Clock} />
@@ -646,7 +783,13 @@ export default function Rebaptize({ initialMode }: { initialMode?: RenameMode } 
       {mode === "find-replace" && (
         <>
           <Form.TextField id="find" title="Find" placeholder="old-text" value={find} onChange={setFind} />
-          <Form.TextField id="replace" title="Replace With" placeholder="new-text" value={replace} onChange={setReplace} />
+          <Form.TextField
+            id="replace"
+            title="Replace With"
+            placeholder="new-text"
+            value={replace}
+            onChange={setReplace}
+          />
           <Form.Checkbox id="useRegex" label="Use Regular Expression" value={useRegex} onChange={setUseRegex} />
           <Form.Description title="Preview" text={frPreview()} />
         </>

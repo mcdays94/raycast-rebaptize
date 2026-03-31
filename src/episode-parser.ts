@@ -14,7 +14,10 @@ export interface ParsedEpisode {
 const PATTERNS: {
   name: string;
   regex: RegExp;
-  extract: (match: RegExpMatchArray, fileName: string) => { episode: number; season: number | null; showName: string | null };
+  extract: (
+    match: RegExpMatchArray,
+    fileName: string,
+  ) => { episode: number; season: number | null; showName: string | null };
 }[] = [
   // S01E01, s01e01, S1E5
   {

@@ -8,7 +8,6 @@ import {
   Toast,
   useNavigation,
   confirmAlert,
-  Alert,
   Color,
 } from "@raycast/api";
 import { useState, useEffect } from "react";
@@ -42,10 +41,7 @@ function matchesGlob(fileName: string, pattern: string): boolean {
   const patterns = pattern.split(",").map((p) => p.trim());
   return patterns.some((p) => {
     // Convert glob to regex: *.mkv -> \.mkv$, *.{mkv,mp4} -> \.(mkv|mp4)$
-    let regexStr = p
-      .replace(/\./g, "\\.")
-      .replace(/\*/g, ".*")
-      .replace(/\?/g, ".");
+    let regexStr = p.replace(/\./g, "\\.").replace(/\*/g, ".*").replace(/\?/g, ".");
 
     // Handle {a,b,c} brace expansion
     regexStr = regexStr.replace(/\{([^}]+)\}/g, (_, group) => {
@@ -60,11 +56,7 @@ function matchesGlob(fileName: string, pattern: string): boolean {
   });
 }
 
-function applyRules(
-  fileName: string,
-  rules: ReplaceRule[],
-  includeExtension: boolean,
-): string {
+function applyRules(fileName: string, rules: ReplaceRule[], includeExtension: boolean): string {
   const ext = extname(fileName);
   let name = includeExtension ? fileName : fileName.slice(0, fileName.length - ext.length);
 
@@ -141,9 +133,7 @@ function PreviewList({ folderPath, previews }: { folderPath: string; previews: R
             subtitle={p.changed ? `→ ${p.renamed}` : "(unchanged)"}
             actions={
               <ActionPanel>
-                {changedCount > 0 && (
-                  <Action title="Confirm Rename All" icon={Icon.Checkmark} onAction={doRename} />
-                )}
+                {changedCount > 0 && <Action title="Confirm Rename All" icon={Icon.Checkmark} onAction={doRename} />}
               </ActionPanel>
             }
           />
@@ -190,9 +180,12 @@ export default function SmartFindReplace() {
 
   function buildRules(): ReplaceRule[] {
     const rules: ReplaceRule[] = [];
-    if (find1) rules.push({ id: newRuleId(), find: find1, replace: replace1, isRegex: isRegex1, caseSensitive: caseSensitive1 });
-    if (find2) rules.push({ id: newRuleId(), find: find2, replace: replace2, isRegex: isRegex2, caseSensitive: caseSensitive2 });
-    if (find3) rules.push({ id: newRuleId(), find: find3, replace: replace3, isRegex: isRegex3, caseSensitive: caseSensitive3 });
+    if (find1)
+      rules.push({ id: newRuleId(), find: find1, replace: replace1, isRegex: isRegex1, caseSensitive: caseSensitive1 });
+    if (find2)
+      rules.push({ id: newRuleId(), find: find2, replace: replace2, isRegex: isRegex2, caseSensitive: caseSensitive2 });
+    if (find3)
+      rules.push({ id: newRuleId(), find: find3, replace: replace3, isRegex: isRegex3, caseSensitive: caseSensitive3 });
     return rules;
   }
 
@@ -213,7 +206,11 @@ export default function SmartFindReplace() {
 
     const rules = buildRules();
     if (rules.length === 0) {
-      await showToast({ style: Toast.Style.Failure, title: "No rules defined", message: "Enter at least one find pattern." });
+      await showToast({
+        style: Toast.Style.Failure,
+        title: "No rules defined",
+        message: "Enter at least one find pattern.",
+      });
       return;
     }
 
@@ -256,7 +253,6 @@ export default function SmartFindReplace() {
 
   return (
     <Form
-      
       actions={
         <ActionPanel>
           <Action.SubmitForm title="Preview Renames" icon={Icon.Eye} onSubmit={handleSubmit} />
@@ -270,7 +266,11 @@ export default function SmartFindReplace() {
         canChooseDirectories
         canChooseFiles={false}
         defaultValue={detectedFolder ? [detectedFolder] : undefined}
-        info={detectedFolder ? `Auto-detected from Finder: ${detectedFolder}` : "Open a Finder window or select a folder manually"}
+        info={
+          detectedFolder
+            ? `Auto-detected from Finder: ${detectedFolder}`
+            : "Open a Finder window or select a folder manually"
+        }
       />
 
       <Form.TextField

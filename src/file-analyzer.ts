@@ -83,9 +83,29 @@ function cleanPrefix(raw: string): string | null {
 
 // Words that should stay lowercase in titles (unless first word)
 const LOWERCASE_WORDS = new Set([
-  "a", "an", "the", "and", "but", "or", "nor", "for", "yet", "so",
-  "in", "on", "at", "to", "by", "of", "up", "as", "is", "if", "it",
-  "vs", "via",
+  "a",
+  "an",
+  "the",
+  "and",
+  "but",
+  "or",
+  "nor",
+  "for",
+  "yet",
+  "so",
+  "in",
+  "on",
+  "at",
+  "to",
+  "by",
+  "of",
+  "up",
+  "as",
+  "is",
+  "if",
+  "it",
+  "vs",
+  "via",
 ]);
 
 /**
@@ -96,7 +116,7 @@ const LOWERCASE_WORDS = new Set([
 export function titleCase(input: string): string {
   // First, split camelCase/PascalCase if it looks like one word with mixed case
   // e.g. "TheShow" → "The Show", "breakingBad" → "breaking Bad"
-  let spaced = input.replace(/([a-z])([A-Z])/g, "$1 $2");
+  const spaced = input.replace(/([a-z])([A-Z])/g, "$1 $2");
 
   // Now split into words and title-case
   const words = spaced.split(/\s+/).filter((w) => w.length > 0);
@@ -167,9 +187,9 @@ export async function analyzeFolder(folderPath: string): Promise<FileAnalysis> {
   const parsedEpisodes = files.map((f) => parseEpisode(f)).filter((p) => p !== null);
   const detectedEpisodeCount = parsedEpisodes.length;
   const hasSeasonInfo = parsedEpisodes.some((p) => p.seasonNumber !== null);
-  const detectedSeasons = [...new Set(parsedEpisodes.filter((p) => p.seasonNumber !== null).map((p) => p.seasonNumber!))].sort(
-    (a, b) => a - b,
-  );
+  const detectedSeasons = [
+    ...new Set(parsedEpisodes.filter((p) => p.seasonNumber !== null).map((p) => p.seasonNumber!)),
+  ].sort((a, b) => a - b);
 
   // Estimate episodes per season from detected data
   let estimatedEpisodesPerSeason: number | null = null;
@@ -245,7 +265,7 @@ export async function analyzeFolder(folderPath: string): Promise<FileAnalysis> {
     } else if (detectedEpisodeCount > 3) {
       // Bare numbered files (like 001.mkv) — likely anime or tv
       suggestedMode = files.length > 15 ? "anime" : "tv-show";
-      confidence = detectedEpisodeCount / files.length * 0.7;
+      confidence = (detectedEpisodeCount / files.length) * 0.7;
     }
   } else if (hasMovieFormat && movieCount > 0) {
     suggestedMode = "movie";

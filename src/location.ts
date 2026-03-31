@@ -6,7 +6,18 @@ import exifReader from "exif-reader";
 
 // File extensions that can contain EXIF GPS data
 const EXIF_EXTENSIONS = new Set([
-  ".jpg", ".jpeg", ".tiff", ".tif", ".heic", ".heif", ".dng", ".cr2", ".nef", ".arw", ".orf", ".rw2",
+  ".jpg",
+  ".jpeg",
+  ".tiff",
+  ".tif",
+  ".heic",
+  ".heif",
+  ".dng",
+  ".cr2",
+  ".nef",
+  ".arw",
+  ".orf",
+  ".rw2",
 ]);
 
 export type LocationGranularity = "city" | "country" | "state";
@@ -118,19 +129,19 @@ function httpsGet(url: string): Promise<string> {
   return new Promise((resolve, reject) => {
     const req = https.get(url, { headers: { "User-Agent": "Rebaptize-Raycast-Extension/1.0" } }, (res) => {
       let data = "";
-      res.on("data", (chunk: Buffer) => { data += chunk.toString(); });
+      res.on("data", (chunk: Buffer) => {
+        data += chunk.toString();
+      });
       res.on("end", () => resolve(data));
     });
     req.on("error", reject);
-    req.setTimeout(10000, () => { req.destroy(new Error("Request timeout")); });
+    req.setTimeout(10000, () => {
+      req.destroy(new Error("Request timeout"));
+    });
   });
 }
 
-export async function reverseGeocode(
-  lat: number,
-  lon: number,
-  granularity: LocationGranularity,
-): Promise<string> {
+export async function reverseGeocode(lat: number, lon: number, granularity: LocationGranularity): Promise<string> {
   try {
     const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10&addressdetails=1`;
     const raw = await httpsGet(url);

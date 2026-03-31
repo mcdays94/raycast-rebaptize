@@ -46,7 +46,10 @@ export function hasTvdbKey(): boolean {
  * Authenticate with TVDB v4 API and get a bearer token.
  * Tokens are cached for 24 hours.
  */
-function httpsRequest(url: string, options: { method?: string; headers?: Record<string, string>; body?: string }): Promise<string> {
+function httpsRequest(
+  url: string,
+  options: { method?: string; headers?: Record<string, string>; body?: string },
+): Promise<string> {
   return new Promise((resolve, reject) => {
     const parsed = new URL(url);
     const req = https.request(
@@ -58,7 +61,9 @@ function httpsRequest(url: string, options: { method?: string; headers?: Record<
       },
       (res) => {
         let data = "";
-        res.on("data", (chunk: Buffer) => { data += chunk.toString(); });
+        res.on("data", (chunk: Buffer) => {
+          data += chunk.toString();
+        });
         res.on("end", () => {
           if (res.statusCode && res.statusCode >= 400) {
             reject(new Error(`TVDB API error (${res.statusCode}): ${data}`));
@@ -69,7 +74,9 @@ function httpsRequest(url: string, options: { method?: string; headers?: Record<
       },
     );
     req.on("error", reject);
-    req.setTimeout(15000, () => { req.destroy(new Error("Request timeout")); });
+    req.setTimeout(15000, () => {
+      req.destroy(new Error("Request timeout"));
+    });
     if (options.body) req.write(options.body);
     req.end();
   });
@@ -145,9 +152,7 @@ export async function getShowDetails(showId: number): Promise<ShowInfo> {
   }>(`/series/${showId}/extended`);
 
   // Filter to "Aired Order" seasons (type.type === "official" or type.id === 1) and skip specials (season 0)
-  const airedSeasons = data.seasons.filter(
-    (s) => s.number > 0 && (s.type.type === "official" || s.type.id === 1),
-  );
+  const airedSeasons = data.seasons.filter((s) => s.number > 0 && (s.type.type === "official" || s.type.id === 1));
 
   // We need episode counts per season — fetch each season
   const seasons: SeasonInfo[] = [];
@@ -171,9 +176,7 @@ export async function getShowDetails(showId: number): Promise<ShowInfo> {
  * Get all episodes for a series (aired order).
  * TVDB v4 paginates at 500 per page.
  */
-export async function getAllEpisodes(
-  showId: number,
-): Promise<EpisodeInfo[]> {
+export async function getAllEpisodes(showId: number): Promise<EpisodeInfo[]> {
   const episodes: EpisodeInfo[] = [];
   let page = 0;
 

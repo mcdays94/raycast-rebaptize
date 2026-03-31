@@ -128,10 +128,7 @@ function matchesGlob(fileName: string, pattern: string): boolean {
   if (!pattern || pattern === "*" || pattern === "*.*") return true;
   const patterns = pattern.split(",").map((p) => p.trim());
   return patterns.some((p) => {
-    let regexStr = p
-      .replace(/\./g, "\\.")
-      .replace(/\*/g, ".*")
-      .replace(/\?/g, ".");
+    let regexStr = p.replace(/\./g, "\\.").replace(/\*/g, ".*").replace(/\?/g, ".");
     regexStr = regexStr.replace(/\{([^}]+)\}/g, (_, group) => {
       return `(${group.split(",").join("|")})`;
     });
@@ -187,7 +184,13 @@ function applyStep(fileName: string, step: ScriptStep, index: number): string {
       return generateAnimeName(fileName, step.animeName ?? "Anime", ep, step.group ?? "", step.quality ?? "");
     }
     case "movie":
-      return generateMovieName(fileName, step.movieName ?? "Movie", step.year ?? "", step.movieQuality ?? "", step.wordDelimiter ?? " ");
+      return generateMovieName(
+        fileName,
+        step.movieName ?? "Movie",
+        step.year ?? "",
+        step.movieQuality ?? "",
+        step.wordDelimiter ?? " ",
+      );
     case "sequential":
       return generateSequentialName(
         fileName,
@@ -220,7 +223,7 @@ export interface ScriptResult {
  * (matched ones get renamed, unmatched stay as-is).
  */
 export function executeScript(files: string[], script: RenameScript): ScriptResult[] {
-  return files.map((fileName, _globalIndex) => {
+  return files.map((fileName) => {
     const matched = matchesGlob(fileName, script.fileFilter);
     if (!matched) {
       return { original: fileName, renamed: fileName, matched: false };
@@ -243,20 +246,34 @@ export function executeScript(files: string[], script: RenameScript): ScriptResu
 
 export function stepLabel(step: ScriptStep): string {
   switch (step.type) {
-    case "uppercase": return "UPPERCASE";
-    case "lowercase": return "lowercase";
-    case "titlecase": return "Title Case";
-    case "sentencecase": return "Sentence case";
-    case "collapse-spaces": return "Collapse spaces";
-    case "swap-delimiter": return `"${step.fromDelimiter}" → "${step.toDelimiter}"`;
-    case "find-replace": return `Find "${step.find}" → "${step.replace}"${step.useRegex ? " (regex)" : ""}`;
-    case "change-extension": return `${step.fromExtension || "*"} → .${step.toExtension}`;
-    case "tv-show": return `TV Show: ${step.showName} S${String(step.season ?? 1).padStart(2, "0")}`;
-    case "anime": return `Anime: ${step.animeName}`;
-    case "movie": return `Movie: ${step.movieName}`;
-    case "sequential": return `Sequential: ${step.prefix}-###`;
-    case "enumerate": return `Enumerate: ${step.prefix ? step.prefix + "-" : ""}###`;
-    default: return step.type;
+    case "uppercase":
+      return "UPPERCASE";
+    case "lowercase":
+      return "lowercase";
+    case "titlecase":
+      return "Title Case";
+    case "sentencecase":
+      return "Sentence case";
+    case "collapse-spaces":
+      return "Collapse spaces";
+    case "swap-delimiter":
+      return `"${step.fromDelimiter}" → "${step.toDelimiter}"`;
+    case "find-replace":
+      return `Find "${step.find}" → "${step.replace}"${step.useRegex ? " (regex)" : ""}`;
+    case "change-extension":
+      return `${step.fromExtension || "*"} → .${step.toExtension}`;
+    case "tv-show":
+      return `TV Show: ${step.showName} S${String(step.season ?? 1).padStart(2, "0")}`;
+    case "anime":
+      return `Anime: ${step.animeName}`;
+    case "movie":
+      return `Movie: ${step.movieName}`;
+    case "sequential":
+      return `Sequential: ${step.prefix}-###`;
+    case "enumerate":
+      return `Enumerate: ${step.prefix ? step.prefix + "-" : ""}###`;
+    default:
+      return step.type;
   }
 }
 

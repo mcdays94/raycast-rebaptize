@@ -207,7 +207,13 @@ export default function RunScript() {
                   )
                 }
               />
-              <Action title="Delete Script" icon={Icon.Trash} style={Action.Style.Destructive} onAction={() => handleDelete(script)} shortcut={{ modifiers: ["cmd"], key: "backspace" }} />
+              <Action
+                title="Delete Script"
+                icon={Icon.Trash}
+                style={Action.Style.Destructive}
+                onAction={() => handleDelete(script)}
+                shortcut={{ modifiers: ["cmd"], key: "backspace" }}
+              />
             </ActionPanel>
           }
         />

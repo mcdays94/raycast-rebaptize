@@ -8,7 +8,6 @@ import {
   Toast,
   useNavigation,
   confirmAlert,
-  Alert,
   Color,
 } from "@raycast/api";
 import { useState, useEffect } from "react";
@@ -45,25 +44,7 @@ function formatDateLabel(date: Date, granularity: DateGranularity): string {
   }
 }
 
-function folderName(date: Date, granularity: DateGranularity): string {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-
-  switch (granularity) {
-    case "day":
-      return `${y}-${m}-${d}`;
-    case "month":
-      return `${y}-${m}`;
-    case "year":
-      return `${y}`;
-  }
-}
-
-async function scanAndGroup(
-  folderPath: string,
-  granularity: DateGranularity,
-): Promise<DateGroup[]> {
+async function scanAndGroup(folderPath: string, granularity: DateGranularity): Promise<DateGroup[]> {
   const entries = await readdir(folderPath);
   const groups = new Map<string, string[]>();
 
@@ -131,7 +112,10 @@ function PreviewGroups({
   async function doOrganize() {
     const confirmed = await confirmAlert({
       title: `${actionVerb} ${totalFiles} files into ${groups.length} folders?`,
-      message: action === "move" ? "You can undo this with the 'Undo Last Rename' command." : "Files will be copied into subfolders.",
+      message:
+        action === "move"
+          ? "You can undo this with the 'Undo Last Rename' command."
+          : "Files will be copied into subfolders.",
       primaryAction: { title: actionVerb },
     });
     if (!confirmed) return;
@@ -215,7 +199,6 @@ export default function SortByDate() {
 
   return (
     <Form
-      
       actions={
         <ActionPanel>
           <Action.SubmitForm title="Scan Files" icon={Icon.MagnifyingGlass} onSubmit={handleSubmit} />
@@ -229,7 +212,11 @@ export default function SortByDate() {
         canChooseDirectories
         canChooseFiles={false}
         defaultValue={detectedFolder ? [detectedFolder] : undefined}
-        info={detectedFolder ? `Auto-detected from Finder: ${detectedFolder}` : "Open a Finder window or select a folder manually"}
+        info={
+          detectedFolder
+            ? `Auto-detected from Finder: ${detectedFolder}`
+            : "Open a Finder window or select a folder manually"
+        }
       />
 
       <Form.Dropdown
@@ -243,12 +230,7 @@ export default function SortByDate() {
         <Form.Dropdown.Item value="year" title="Year (2026)" icon={Icon.Calendar} />
       </Form.Dropdown>
 
-      <Form.Dropdown
-        id="action"
-        title="File Action"
-        value={action}
-        onChange={(v) => setAction(v as FileAction)}
-      >
+      <Form.Dropdown id="action" title="File Action" value={action} onChange={(v) => setAction(v as FileAction)}>
         <Form.Dropdown.Item value="move" title="Move Files" icon={Icon.ArrowRight} />
         <Form.Dropdown.Item value="copy" title="Copy Files" icon={Icon.CopyClipboard} />
       </Form.Dropdown>

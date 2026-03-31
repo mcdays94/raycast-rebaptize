@@ -43,7 +43,9 @@ function httpsGet(url: string): Promise<string> {
   return new Promise((resolve, reject) => {
     const req = https.get(url, (res) => {
       let data = "";
-      res.on("data", (chunk: Buffer) => { data += chunk.toString(); });
+      res.on("data", (chunk: Buffer) => {
+        data += chunk.toString();
+      });
       res.on("end", () => {
         if (res.statusCode && res.statusCode >= 400) {
           reject(new Error(`TMDB API error: ${res.statusCode} — ${data}`));
@@ -53,7 +55,9 @@ function httpsGet(url: string): Promise<string> {
       });
     });
     req.on("error", reject);
-    req.setTimeout(15000, () => { req.destroy(new Error("Request timeout")); });
+    req.setTimeout(15000, () => {
+      req.destroy(new Error("Request timeout"));
+    });
   });
 }
 
@@ -111,9 +115,7 @@ export async function buildEpisodeMap(
   let absoluteEp = 1;
 
   // Filter out specials (season 0) and sort by season number
-  const seasons = show.seasons
-    .filter((s) => s.season_number > 0)
-    .sort((a, b) => a.season_number - b.season_number);
+  const seasons = show.seasons.filter((s) => s.season_number > 0).sort((a, b) => a.season_number - b.season_number);
 
   for (const season of seasons) {
     // Fetch each season's episodes

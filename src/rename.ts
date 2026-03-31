@@ -40,7 +40,17 @@ function parseSeasonEpisode(fileName: string): { season: number | null; episode:
   return { season: null, episode: null };
 }
 
-export type RenameMode = "tv-show" | "anime" | "movie" | "sequential" | "date" | "find-replace" | "change-extension" | "change-case" | "swap-delimiter" | "enumerate";
+export type RenameMode =
+  | "tv-show"
+  | "anime"
+  | "movie"
+  | "sequential"
+  | "date"
+  | "find-replace"
+  | "change-extension"
+  | "change-case"
+  | "swap-delimiter"
+  | "enumerate";
 
 export interface RenameOptions {
   mode: RenameMode;
@@ -121,7 +131,14 @@ function formatDate(date: Date, format: string): string {
 }
 
 // TV Show: Breaking Bad S01E01 1080p.mkv (delimiter & suffix configurable)
-export function generateTvShowName(fileName: string, showName: string, season: number, episode: number, delimiter = " ", suffix = ""): string {
+export function generateTvShowName(
+  fileName: string,
+  showName: string,
+  season: number,
+  episode: number,
+  delimiter = " ",
+  suffix = "",
+): string {
   const ext = extname(fileName);
   const sanitized = showName.replace(/\s+/g, delimiter);
   const suffixPart = suffix ? `${delimiter}${suffix}` : "";
@@ -143,7 +160,13 @@ export function generateAnimeName(
 }
 
 // Movie: Movie Name 2026 1080p.mkv (delimiter configurable)
-export function generateMovieName(fileName: string, movieName: string, year: string, quality: string, delimiter = " "): string {
+export function generateMovieName(
+  fileName: string,
+  movieName: string,
+  year: string,
+  quality: string,
+  delimiter = " ",
+): string {
   const ext = extname(fileName);
   const sanitized = movieName.replace(/\s+/g, delimiter);
   const parts = [sanitized];
@@ -202,9 +225,29 @@ export function generateChangedExtension(fileName: string, fromExt: string, toEx
 
 // Case conversion (operates on filename without extension)
 const TITLE_CASE_LOWERCASE = new Set([
-  "a", "an", "the", "and", "but", "or", "nor", "for", "yet", "so",
-  "in", "on", "at", "to", "by", "of", "up", "as", "is", "if", "it",
-  "vs", "via",
+  "a",
+  "an",
+  "the",
+  "and",
+  "but",
+  "or",
+  "nor",
+  "for",
+  "yet",
+  "so",
+  "in",
+  "on",
+  "at",
+  "to",
+  "by",
+  "of",
+  "up",
+  "as",
+  "is",
+  "if",
+  "it",
+  "vs",
+  "via",
 ]);
 
 export function generateCaseName(fileName: string, caseType: string, fixSpaces: boolean): string {
@@ -256,7 +299,13 @@ export function generateSwapDelimiterName(fileName: string, fromDel: string, toD
 }
 
 // Enumerate: prefix-001.ext (index passed in, sorting handled externally)
-export function generateEnumerateName(fileName: string, prefix: string, index: number, pad: number, separator: string): string {
+export function generateEnumerateName(
+  fileName: string,
+  prefix: string,
+  index: number,
+  pad: number,
+  separator: string,
+): string {
   const ext = extname(fileName);
   const num = String(index).padStart(pad, "0");
   if (prefix) {
@@ -326,7 +375,13 @@ export async function generatePreviews(
         break;
       }
       case "movie":
-        renamed = generateMovieName(fileName, options.movieName || "Movie", options.year ?? "", options.movieQuality ?? "", options.wordDelimiter ?? " ");
+        renamed = generateMovieName(
+          fileName,
+          options.movieName || "Movie",
+          options.year ?? "",
+          options.movieQuality ?? "",
+          options.wordDelimiter ?? " ",
+        );
         break;
       case "sequential":
         renamed = generateSequentialName(
@@ -355,25 +410,13 @@ export async function generatePreviews(
         );
         break;
       case "change-extension":
-        renamed = generateChangedExtension(
-          fileName,
-          options.fromExtension ?? "",
-          options.toExtension ?? "",
-        );
+        renamed = generateChangedExtension(fileName, options.fromExtension ?? "", options.toExtension ?? "");
         break;
       case "change-case":
-        renamed = generateCaseName(
-          fileName,
-          options.caseType ?? "lowercase",
-          options.fixSpaces ?? true,
-        );
+        renamed = generateCaseName(fileName, options.caseType ?? "lowercase", options.fixSpaces ?? true);
         break;
       case "swap-delimiter":
-        renamed = generateSwapDelimiterName(
-          fileName,
-          options.fromDelimiter ?? ".",
-          options.toDelimiter ?? " ",
-        );
+        renamed = generateSwapDelimiterName(fileName, options.fromDelimiter ?? ".", options.toDelimiter ?? " ");
         break;
       case "enumerate":
         renamed = generateEnumerateName(

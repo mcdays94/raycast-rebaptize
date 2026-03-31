@@ -8,15 +8,24 @@ import {
   Toast,
   useNavigation,
   confirmAlert,
-  Alert,
   Color,
 } from "@raycast/api";
 import { useState, useEffect } from "react";
 import { readdir, stat, mkdir, rename as fsRename } from "fs/promises";
 import { join, extname } from "path";
 import { parseEpisode, assignSeasons, type ParsedEpisode } from "./episode-parser";
-import { hasTvdbKey, searchShow as tvdbSearch, buildEpisodeMap as tvdbBuildMap, type ShowInfo as TvdbShowInfo } from "./tvdb";
-import { hasTmdbKey, searchShow as tmdbSearch, buildEpisodeMap as tmdbBuildMap, type ShowInfo as TmdbShowInfo } from "./tmdb";
+import {
+  hasTvdbKey,
+  searchShow as tvdbSearch,
+  buildEpisodeMap as tvdbBuildMap,
+  type ShowInfo as TvdbShowInfo,
+} from "./tvdb";
+import {
+  hasTmdbKey,
+  searchShow as tmdbSearch,
+  buildEpisodeMap as tmdbBuildMap,
+  type ShowInfo as TmdbShowInfo,
+} from "./tmdb";
 import { getFinderFolder } from "./finder";
 import { analyzeFolder } from "./file-analyzer";
 import { saveUndoState } from "./instant-runner";
@@ -319,9 +328,7 @@ export default function SmartOrganize() {
         const ext = extname(p.fileName);
         const displaySeason = mapping.season + seasonOffset;
 
-        const targetFolder = folderTemplate
-          .replace("{season}", padNumber(displaySeason, 2))
-          .replace("{show}", show);
+        const targetFolder = folderTemplate.replace("{season}", padNumber(displaySeason, 2)).replace("{show}", show);
 
         const newName =
           fileTemplate
@@ -360,7 +367,6 @@ export default function SmartOrganize() {
 
   return (
     <Form
-      
       actions={
         <ActionPanel>
           <Action.SubmitForm title="Scan and Preview" icon={Icon.Eye} onSubmit={handleSubmit} />
@@ -393,7 +399,9 @@ export default function SmartOrganize() {
         canChooseFiles={false}
         defaultValue={folderPath ? [folderPath] : undefined}
         onChange={onFolderChange}
-        info={folderPath ? `Auto-detected from Finder: ${folderPath}` : "Open a Finder window or select a folder manually"}
+        info={
+          folderPath ? `Auto-detected from Finder: ${folderPath}` : "Open a Finder window or select a folder manually"
+        }
       />
 
       <Form.TextField
@@ -411,7 +419,11 @@ export default function SmartOrganize() {
           id="metadataSource"
           title="Metadata Source"
           value={metadataSource}
-          onChange={(v) => { setMetadataSource(v as MetadataSource); setSearchResults([]); setSelectedShowId(""); }}
+          onChange={(v) => {
+            setMetadataSource(v as MetadataSource);
+            setSearchResults([]);
+            setSelectedShowId("");
+          }}
         >
           <Form.Dropdown.Item value="none" title="Manual (set episodes per season)" />
           {tmdbAvailable && <Form.Dropdown.Item value="tmdb" title="TMDB (free)" />}
