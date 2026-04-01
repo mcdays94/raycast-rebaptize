@@ -38,8 +38,6 @@ declare namespace Preferences {
   export type PresetAnime = ExtensionPreferences & {}
   /** Preferences accessible in the `preset-movie` command */
   export type PresetMovie = ExtensionPreferences & {}
-  /** Preferences accessible in the `preset-sequential` command */
-  export type PresetSequential = ExtensionPreferences & {}
   /** Preferences accessible in the `preset-date-based` command */
   export type PresetDateBased = ExtensionPreferences & {}
   /** Preferences accessible in the `preset-change-case` command */
@@ -123,8 +121,6 @@ declare namespace Arguments {
   export type PresetAnime = {}
   /** Arguments passed to the `preset-movie` command */
   export type PresetMovie = {}
-  /** Arguments passed to the `preset-sequential` command */
-  export type PresetSequential = {}
   /** Arguments passed to the `preset-date-based` command */
   export type PresetDateBased = {}
   /** Arguments passed to the `preset-change-case` command */
