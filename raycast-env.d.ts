@@ -78,6 +78,28 @@ declare namespace Preferences {
   export type InstantEnumerateByDate = ExtensionPreferences & {}
   /** Preferences accessible in the `instant-undo` command */
   export type InstantUndo = ExtensionPreferences & {}
+  /** Preferences accessible in the `instant-remove-accents` command */
+  export type InstantRemoveAccents = ExtensionPreferences & {}
+  /** Preferences accessible in the `instant-strip-digits` command */
+  export type InstantStripDigits = ExtensionPreferences & {}
+  /** Preferences accessible in the `instant-strip-special` command */
+  export type InstantStripSpecial = ExtensionPreferences & {}
+  /** Preferences accessible in the `instant-trim` command */
+  export type InstantTrim = ExtensionPreferences & {}
+  /** Preferences accessible in the `instant-pad-numbers` command */
+  export type InstantPadNumbers = ExtensionPreferences & {}
+  /** Preferences accessible in the `instant-unpad-numbers` command */
+  export type InstantUnpadNumbers = ExtensionPreferences & {}
+  /** Preferences accessible in the `instant-parent-folder` command */
+  export type InstantParentFolder = ExtensionPreferences & {}
+  /** Preferences accessible in the `instant-swap-parts` command */
+  export type InstantSwapParts = ExtensionPreferences & {}
+  /** Preferences accessible in the `instant-transliterate` command */
+  export type InstantTransliterate = ExtensionPreferences & {}
+  /** Preferences accessible in the `exif-rename` command */
+  export type ExifRename = ExtensionPreferences & {}
+  /** Preferences accessible in the `rename-from-csv` command */
+  export type RenameFromCsv = ExtensionPreferences & {}
 }
 
 declare namespace Arguments {
@@ -141,5 +163,27 @@ declare namespace Arguments {
   export type InstantEnumerateByDate = {}
   /** Arguments passed to the `instant-undo` command */
   export type InstantUndo = {}
+  /** Arguments passed to the `instant-remove-accents` command */
+  export type InstantRemoveAccents = {}
+  /** Arguments passed to the `instant-strip-digits` command */
+  export type InstantStripDigits = {}
+  /** Arguments passed to the `instant-strip-special` command */
+  export type InstantStripSpecial = {}
+  /** Arguments passed to the `instant-trim` command */
+  export type InstantTrim = {}
+  /** Arguments passed to the `instant-pad-numbers` command */
+  export type InstantPadNumbers = {}
+  /** Arguments passed to the `instant-unpad-numbers` command */
+  export type InstantUnpadNumbers = {}
+  /** Arguments passed to the `instant-parent-folder` command */
+  export type InstantParentFolder = {}
+  /** Arguments passed to the `instant-swap-parts` command */
+  export type InstantSwapParts = {}
+  /** Arguments passed to the `instant-transliterate` command */
+  export type InstantTransliterate = {}
+  /** Arguments passed to the `exif-rename` command */
+  export type ExifRename = {}
+  /** Arguments passed to the `rename-from-csv` command */
+  export type RenameFromCsv = {}
 }
 
